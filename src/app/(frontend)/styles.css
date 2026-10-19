@@ -1,0 +1,30 @@
+@import "../../../styles/fonts.css";
+@import "tailwindcss";
+@import "@figma/astraui/styles.css";
+@import "astro-liquid-glass/styles/glass.css";
+@import "../../../styles/global.css";
+
+/* The glass package is consumed as framework-neutral CSS, without its Astro runtime. */
+.figma-custom-code-fragment {
+  display: contents;
+}
+
+.figma-bypass-link {
+  position: fixed;
+  top: var(--space-md);
+  left: var(--space-xl);
+  z-index: var(--blog-z-skip);
+  transform: translateY(-150%);
+  border-radius: var(--corner-md);
+  background: var(--brand-primary);
+  color: var(--on-brand);
+  padding: var(--space-md) var(--space-lg);
+  font-family: var(--font-sans);
+  font-size: var(--blog-font-small);
+  font-weight: var(--blog-weight-strong);
+  text-decoration: none;
+}
+
+.figma-bypass-link:focus {
+  transform: translateY(0);
+}

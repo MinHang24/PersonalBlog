@@ -1,0 +1,1705 @@
+
+--- DS foundation inventory ---
+color.md
+elevation.md
+focus.md
+icons.md
+input-styling.md
+modes.md
+radius.md
+spacing.md
+surfaces.md
+typography.md
+
+--- DS catalog ---
+# Component Catalog
+
+Always prefer components from `@figma/astraui` over plain HTML elements. Do NOT write code using a component until you have read its guidelines file.
+
+```tsx
+import { Button, Avatar, InputField } from '@figma/astraui'
+```
+
+## Buttons & actions
+
+| Component | Alt names | Purpose | Guidelines |
+|---|---|---|---|
+| Button | CTA, action button | Primary, neutral, subtle actions | [button.md](button.md) |
+| IconButton | Icon action, circle button | Icon-only circular action button | [button.md](button.md) |
+| ButtonGroup | Button bar, action group | Grouped related actions with alignment | [button.md](button.md) |
+| FavoriteButton | Like button, star button | Toggle favorite/star state | [button.md](button.md) |
+
+## Inputs & forms
+
+| Component | Alt names | Purpose | Guidelines |
+|---|---|---|---|
+| InputField | Text input, text field | Single-line text entry with label/description | [input.md](input.md) |
+| TextareaField | Multi-line input, text area | Multi-line text entry with label/description | [input.md](input.md) |
+| SelectField | Dropdown, select, picker | Dropdown selection from predefined options | [input.md](input.md) |
+| SearchComponent | Search bar, search input | Search with animated placeholder | [input.md](input.md) |
+| Checkbox | Check, boolean input | Boolean selection with label/description | [input.md](input.md) |
+| RadioGroup | Radio buttons, single select | Mutually exclusive choices | [input.md](input.md) |
+| SwitchField | Toggle, switch | On/off toggle setting | [input.md](input.md) |
+| PromptInput | Chat input, message input | AI prompt text entry with send/attach | [promptchat.md](promptchat.md) |
+
+## Navigation
+
+| Component | Alt names | Purpose | Guidelines |
+|---|---|---|---|
+| SidebarNavigation | Sidebar, nav rail, app shell | Persistent 60px icon rail — every page | [navigation.md](navigation.md) |
+| SidebarButton | Nav icon, sidebar icon | Icon button for SidebarNavigation | [navigation.md](navigation.md) |
+| SecondaryNav | Sub-nav, section nav, side panel | Secondary navigation for sub-sections | [navigation.md](navigation.md) |
+| SecondaryNavItem | Sub-nav item, section link | Item within SecondaryNav | [navigation.md](navigation.md) |
+| Tabs | Tab bar, tab switcher | Tertiary content switching within a section | [tabs.md](tabs.md) |
+| SegmentedControl | Switcher, toggle group | Inline icon switcher | [tabs.md](tabs.md) |
+
+## Media & content
+
+| Component | Alt names | Purpose | Guidelines |
+|---|---|---|---|
+| Avatar | Profile image, user photo | User/entity profile image or initials | [media.md](media.md) |
+| AvatarGroup | Avatar stack, user group | Grouped avatar display with overflow | [media.md](media.md) |
+| ItemCard | Video card, content card | Content card with thumbnail and metadata | [media.md](media.md) |
+| DurationBadge | Timecode, duration label | Compact timecode label for video thumbnails | [media.md](media.md) |
+| VideoControl | Video player, playback controls | Video playback controls with seek bar | [media.md](media.md) |
+
+## Feedback & status
+
+| Component | Alt names | Purpose | Guidelines |
+|---|---|---|---|
+| Toast | Notification, snackbar | Brief notification with progress | [feedback.md](feedback.md) |
+| Badge | Label, tag, status pill | Status labels and counters | [feedback.md](feedback.md) |
+| Tooltip | Hint, popover, info tip | Contextual hint on hover/focus | [feedback.md](feedback.md) |
+| Modal | Dialog, popup, overlay | Focused task dialog with backdrop | [modal.md](modal.md) |
+
+## Prompt Chat
+
+| Component | Alt names | Purpose | Guidelines |
+|---|---|---|---|
+| AIVideoCreation | Video creator, new video prompt | Entry point for AI video generation with suggestion chips | [promptchat.md](promptchat.md) |
+| ChatBubbles | Message, chat message | AI or user chat message bubble | [promptchat.md](promptchat.md) |
+| PromptInput | Chat input, message box | Text input with send/attach for AI prompts | [promptchat.md](promptchat.md) |
+| PromptPane | Chat panel, chat sidebar | Full chat container with messages + input | [promptchat.md](promptchat.md) |
+
+## Toolbar
+
+| Component | Alt names | Purpose | Guidelines |
+|---|---|---|---|
+| Toolbar | Tool palette, action bar | Floating toolbar container | [toolbar.md](toolbar.md) |
+| ToolbarItem | Tool button, toolbar icon | Icon button within a Toolbar | [toolbar.md](toolbar.md) |
+
+## Layout & utility
+
+| Component | Alt names | Purpose | Guidelines |
+|---|---|---|---|
+| AstraLogo | Logo, brand mark | Brand mark SVG | [navigation.md](navigation.md) |
+| ThemeProvider | Theme wrapper, dark mode | App root provider for theme management | [../foundations/modes.md](../foundations/modes.md) |
+
+## Button variant decision tree
+
+```
+┌─ "What button variant should I use?"
+│
+├─ Main call-to-action (one per section)?
+│  └─ variant="primary"
+│
+├─ Supporting action alongside a primary?
+│  └─ variant="neutral" ⭐ Default for secondary actions
+│
+└─ Subtle or low-emphasis action?
+   └─ variant="subtle"
+```
+
+Rules:
+- Only one `primary` button per visible section
+- Do not use variant names that don't exist (`"secondary"`, `"ghost"`, `"destructive"`)
+- Valid variants are: `"primary"`, `"neutral"`, `"subtle"` — nothing else
+
+## Input component selection
+
+```
+┌─ "How should the user provide input?"
+│
+├─ Choose from mutually exclusive options?
+│  └─ RadioGroup
+│
+├─ Choose from predefined options (dropdown)?
+│  └─ SelectField
+│
+├─ Boolean on/off (setting with label)?
+│  └─ SwitchField
+│
+├─ Boolean on/off (form field)?
+│  └─ Checkbox
+│
+├─ Freeform short text?
+│  └─ InputField
+│
+├─ Freeform long text?
+│  └─ TextareaField
+│
+└─ Search with animated placeholder?
+   └─ SearchComponent
+```
+
+## Feedback component selection
+
+```
+┌─ "How should I show information to the user?"
+│
+├─ Brief notification with progress?
+│  └─ Toast — "Uploading...", "Changes saved"
+│
+├─ Status label or counter?
+│  └─ Badge — "New", "Active", "3 items"
+│
+├─ Contextual hint on hover?
+│  └─ Tooltip — icon button labels, abbreviation explanations
+│
+└─ Requires user decision or focused task?
+   └─ Modal — confirmations, export settings, forms
+```
+
+## Navigation hierarchy
+
+```
+┌─ "What navigation component should I use?"
+│
+├─ App-level navigation (always present)?
+│  └─ SidebarNavigation + SidebarButton (PRIMARY)
+│
+├─ Page sub-sections (settings, detail views)?
+│  └─ SecondaryNav + SecondaryNavItem (SECONDARY)
+│
+└─ Content switching within a section?
+   └─ Tabs (TERTIARY)
+```
+
+IMPORTANT: Never skip navigation levels. Every desktop page includes SidebarNavigation. Use SecondaryNav for sub-sections, not Tabs.
+
+## Common props
+
+Most components accept:
+- `className`: String for additional CSS classes
+- `disabled`: Boolean to disable the component
+
+Form components additionally accept:
+- `label`: Field label text
+- `description`: Helper text below the label
+- `onChange`: Simplified callback — `(value) => void`, not native event
+
+--- DS foundations ---
+# Color Tokens
+
+## Color palette overview
+
+Astra uses a primarily neutral palette with a branded lavender canvas. Brand color (`brand-primary`) is used sparingly — only for primary actions, active states, and small accents.
+
+| Role | Value (light) | Token | Frequency | Usage |
+|---|---|---|---|---|
+| Lavender canvas | `#eaeaff` | `--brand-tertiary` | **Dominant** | Page background canvas |
+| White surface | `#ffffff` | `--surface-bg` | **Dominant** | Cards, panels, sidebar, elevated content |
+| Black text | `rgba(0,0,0,0.85)` | `--text-primary` | **Dominant** | Primary text |
+| Brand purple | `#5250f3` | `--brand-primary` | Sparse | Primary buttons, active tabs, progress bars |
+| Dark surface | `#22222c` | `--surface-dark` | Internal | Tooltips, component internals |
+
+The UI is ~90% neutral surfaces (`brand-tertiary` canvas + `surface-bg` cards). Brand color appears only in primary actions, active indicators, and small highlights.
+
+## Naming pattern
+
+Astra tokens follow: `--{category}-{role}`
+
+- **category**: `brand`, `surface`, `text`, `border`, `bg`
+- **role**: describes the semantic purpose
+
+| Category | Tokens | Used for |
+|---|---|---|
+| `brand-*` | `primary`, `hover`, `dark`, `secondary`, `tertiary`, `muted` | Brand identity, actions, canvas |
+| `surface-*` | `bg`, `secondary-bg`, `hover`, `dark`, `dark-hover`, `darkest` | Content surfaces, tooltips, component internals |
+| `text-*` | `primary`, `secondary`, `tertiary` | Text hierarchy |
+| `border-*` | `primary`, `secondary`, `selected` | Interactive element borders |
+| `bg-*` | `faint`, `subtle`, `hover` | Background tints within surfaces |
+| `on-*` | `brand`, `reverse` | Text on solid color backgrounds |
+| Status | `success`, `warning`, `danger` | Semantic status indicators |
+
+## Tailwind class mapping
+
+Tokens are mapped to Tailwind via `@theme inline`. Use these classes — never hardcode hex values.
+
+```
+bg-brand-primary, text-brand-primary, border-brand-primary
+bg-brand-hover, bg-brand-dark, bg-brand-secondary, bg-brand-tertiary, bg-brand-muted
+bg-surface-bg, bg-surface-secondary-bg, bg-surface-hover, bg-surface-dark
+text-text-primary, text-text-secondary, text-text-tertiary
+border-border-primary, border-border-secondary, border-border-selected
+bg-bg-faint, bg-bg-subtle, bg-bg-hover
+text-on-brand, text-on-reverse
+bg-success, bg-warning, bg-danger
+bg-input-bg, bg-modal-scrim
+```
+
+## Decision trees
+
+### Background color
+
+```
+┌─ "What background color should I use?"
+│
+├─ Page canvas (main content area)?
+│  └─ bg-brand-tertiary
+│
+├─ Elevated content (card, panel, form container)?
+│  └─ bg-surface-bg
+│
+├─ Sidebar navigation?
+│  └─ bg-surface-bg (with border-r border-border-primary)
+│
+├─ Secondary navigation panel?
+│  └─ bg-surface-secondary-bg
+│
+├─ Recessed area within a card?
+│  └─ bg-bg-faint
+│
+├─ Input field background?
+│  └─ bg-input-bg
+│
+├─ Subtle grouping within a card?
+│  └─ bg-bg-subtle
+│
+├─ Hover state on an interactive region?
+│  └─ bg-surface-hover or bg-bg-hover
+│
+├─ Primary action button?
+│  └─ bg-brand-primary + text-on-brand
+│
+├─ AI chat bubble?
+│  └─ bg-brand-secondary (built into ChatBubbles component)
+│
+├─ Modal backdrop?
+│  └─ bg-modal-scrim
+│
+└─ Status indicator?
+   └─ bg-success, bg-warning, or bg-danger
+```
+
+### Text color
+
+```
+┌─ "What text color should I use?"
+│
+├─ PRIMARY content users must read?
+│  └─ text-text-primary
+│
+├─ SUPPORTING information (descriptions, helper text, timestamps)?
+│  └─ text-text-secondary
+│
+├─ DECORATIVE or very low priority (placeholders, disabled labels)?
+│  └─ text-text-tertiary
+│
+├─ Interactive text (active tab label, link)?
+│  └─ text-brand-primary
+│
+├─ Text on brand-primary background?
+│  └─ text-on-brand (always white)
+│
+├─ Status text?
+│  └─ text-danger, text-success, text-warning
+│
+└─ Element that must stay dark in both modes?
+   └─ text-on-reverse
+```
+
+### Border color
+
+```
+┌─ "What border color should I use?"
+│
+├─ Default interactive element (input, select, clickable card)?
+│  └─ border-border-primary
+│
+├─ Subtle separator (secondary divider, card edge)?
+│  └─ border-border-secondary
+│
+├─ Focused or selected element?
+│  └─ border-border-selected
+│
+└─ Layout region boundary?
+   └─ No border — use surface color contrast instead
+      Exception: SidebarNavigation uses border-r border-border-primary
+```
+
+### Icon color
+
+```
+Icons inherit text color via currentColor. Follow the text hierarchy:
+├─ Primary → text-text-primary (default via currentColor)
+├─ Secondary → text-text-secondary
+├─ On brand background → text-on-brand
+├─ Active/selected → text-brand-primary
+└─ Status → text-danger, text-success, text-warning
+```
+
+## Token usage by element type
+
+### Buttons
+- Primary: `bg-brand-primary` background, `text-on-brand` text
+- Neutral: `bg-surface-bg` background, `text-text-primary` text, `border-border-primary` border
+- Subtle: transparent background, `text-text-primary` text
+
+### Text
+- Body text: `text-text-primary`
+- Descriptions, metadata: `text-text-secondary`
+- Placeholders: `text-text-tertiary`
+- Active tab, link: `text-brand-primary`
+- Error message: `text-danger`
+
+### Surfaces
+- Page canvas: `bg-brand-tertiary`
+- Elevated cards/panels: `bg-surface-bg`
+- Sidebar: `bg-surface-bg` with `border-r border-border-primary`
+- Recessed areas: `bg-bg-faint` or `bg-bg-subtle`
+- Tooltips: `bg-surface-dark` (component internal)
+
+### Icons
+- Default: inherits `currentColor` from parent text color
+- Active sidebar item: 85% opacity via component
+- Status: `text-danger`, `text-success`
+
+## Common mistake: "on-" roles
+
+Use `on-brand` for text on solid brand backgrounds:
+
+```tsx
+{/* CORRECT — white text on brand background */}
+<div className="bg-brand-primary text-on-brand">Save</div>
+
+{/* WRONG — primary text disappears on brand background */}
+<div className="bg-brand-primary text-text-primary">Save</div>
+```
+
+`on-reverse` (`#1e1e1e`) is for elements that must stay dark in both light and dark modes — e.g., the dot separator in `ItemCard` metadata.
+
+## Common mistake: brand color overuse
+
+IMPORTANT: `brand-primary` and `brand-secondary` are for small accents only. Never use them as backgrounds for cards, panels, sections, or large areas.
+
+```tsx
+{/* CORRECT — brand on a button */}
+<Button variant="primary">Save</Button>
+
+{/* WRONG — brand as a section background */}
+<div className="bg-brand-primary p-xl">
+  <h2>Welcome</h2>
+</div>
+```
+# Elevation Tokens
+
+Astra is a **surface-layered, minimal** design system. Shadows are reserved for floating overlays only — main surfaces use background color contrast for definition, not box-shadow.
+
+## Shadow usage
+
+| Level | Usage | Where |
+|---|---|---|
+| None | **~95% of elements** | Cards, panels, nav, inputs, buttons — default state |
+| Subtle | Floating overlays | Toolbar (`0px 0px 12.1px 0px rgba(0,0,0,0.1)`) |
+| Scrim | Modal backdrop | `bg-modal-scrim` (`rgba(0,0,0,0.75)`) — handled by Modal component |
+
+Most elements use **no shadow**. Visual hierarchy comes from surface color contrast (`surface-bg` cards on `brand-tertiary` canvas), not elevation.
+
+## Decision tree
+
+```
+┌─ "Should I add a shadow?"
+│
+├─ Card or panel on the page canvas?
+│  └─ No shadow — bg-surface-bg on bg-brand-tertiary provides contrast
+│
+├─ Sidebar or secondary navigation?
+│  └─ No shadow — border-r border-border-primary defines the edge
+│
+├─ Button or input?
+│  └─ No shadow — borders and background color handle states
+│
+├─ Floating toolbar?
+│  └─ Yes — subtle shadow (built into Toolbar component)
+│
+├─ Modal or dialog?
+│  └─ Yes — scrim backdrop (built into Modal component)
+│
+├─ Tooltip?
+│  └─ No shadow — bg-surface-dark provides contrast
+│
+└─ Dropdown or popover?
+   └─ Subtle shadow + border-border-primary is acceptable
+```
+
+## Rules
+
+- Default to no shadow — Astra uses surface color contrast, not elevation
+- Only use shadows for floating overlays (toolbar, modal, dropdown)
+- Do not add shadows to cards, panels, or navigation — they don't need them
+- Do not create custom `box-shadow` values — use component defaults
+- Always pair shadows with a background color — shadows on transparent surfaces look broken
+
+```tsx
+{/* CORRECT — card uses surface color, no shadow */}
+<div className="bg-surface-bg rounded-corner-lg p-xl">
+  <InputField label="Name" />
+</div>
+
+{/* WRONG — unnecessary shadow on a card */}
+<div className="bg-surface-bg rounded-corner-lg p-xl shadow-lg">
+  <InputField label="Name" />
+</div>
+
+{/* CORRECT — Toolbar has shadow built in */}
+<Toolbar>
+  <ToolbarItem icon={<Scissors size={24} />} />
+</Toolbar>
+
+{/* CORRECT — Modal handles its own scrim and elevation */}
+<Modal isOpen={open} onClose={close} title="Export">
+  <p>Content</p>
+</Modal>
+```
+# Focus Styles
+
+## Focus ring pattern
+
+All interactive elements must have a visible focus indicator for keyboard navigation. Astra uses a consistent focus-visible pattern:
+
+```css
+.interactive:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+```
+
+In Tailwind:
+```tsx
+<button className="focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2">
+  Custom button
+</button>
+```
+
+## Rules
+
+- Always use `focus-visible`, not `focus` — the ring only appears for keyboard navigation, not mouse clicks
+- Use `brand-primary` for the outline color — it provides consistent brand identity on focus
+- Use 2px outline width with 2px offset as the standard pattern
+- Do not use `box-shadow` for focus indicators — use `outline`
+- Do not remove focus styles — if the default is ugly, replace it with the pattern above, never set `outline: none` without a replacement
+
+## Focus on colored backgrounds
+
+On `brand-primary` or dark surfaces, the standard brand-colored focus ring may not have sufficient contrast. Use white instead:
+
+```tsx
+{/* On brand background — use white focus ring */}
+<div className="bg-brand-primary">
+  <button className="focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2">
+    Action
+  </button>
+</div>
+```
+
+## Components with built-in focus
+
+Design system components handle their own focus styles. Do not override focus behavior on these components:
+
+- **Button** — all variants
+- **InputField**, **TextareaField**, **SelectField** — input focus states
+- **Checkbox**, **RadioGroup**, **SwitchField** — selection controls
+- **SidebarButton**, **SecondaryNavItem** — navigation items
+- **Tabs** — tab focus and keyboard navigation
+- **ToolbarItem** — toolbar button focus
+- **Modal** — focus trap and Escape key handling
+
+## Custom interactive elements
+
+If you create custom interactive elements (clickable divs, custom controls), you must implement focus styles manually:
+
+```tsx
+{/* Custom clickable element — must add focus styles */}
+<div
+  role="button"
+  tabIndex={0}
+  className="bg-surface-bg rounded-corner-lg p-xl cursor-pointer
+             focus-visible:outline-2 focus-visible:outline-brand-primary focus-visible:outline-offset-2"
+  onClick={handleClick}
+  onKeyDown={(e) => e.key === 'Enter' && handleClick()}
+>
+  Custom card
+</div>
+```
+
+Rules for custom interactive elements:
+- Add `tabIndex={0}` to make it focusable
+- Add `role="button"` (or appropriate ARIA role)
+- Handle `Enter` and `Space` key events for activation
+- Apply the standard focus-visible pattern
+# Icons
+
+## Icon library
+
+All icons come from `lucide-react`. Do NOT import icons from `@figma/astraui` or create inline SVGs.
+
+```tsx
+import { Home, Search, Settings } from 'lucide-react'
+```
+
+For the complete catalog of available icons, see `icon-discovery.md`.
+
+## Icon sizes
+
+| Size | Frequency | Usage |
+|---|---|---|
+| 24px | ~60% | Toolbar items, segmented controls, video controls |
+| 20px | ~20% | Sidebar buttons, secondary nav items (via `className="size-full"` on parent) |
+| 16px | ~15% | Input prefixes/suffixes, inline indicators, compact UI |
+| 32px | ~5% | Large feature icons, empty states |
+
+Default to 24px for most UI contexts. Use 16px for inline positions within inputs or compact elements.
+
+## Sizing patterns
+
+```tsx
+{/* Standard 24px — explicit size prop */}
+<Search size={24} />
+
+{/* 16px — for input prefixes */}
+<InputField prefix={<Search size={16} />} label="Search" />
+
+{/* Fill parent container — used in SidebarButton and SecondaryNavItem */}
+<SidebarButton icon={<Home className="size-full" strokeWidth={1.5} />} />
+<SecondaryNavItem icon={<Home className="size-full" strokeWidth={1.5} />} label="Home" />
+```
+
+When icons are passed to `SidebarButton` or `SecondaryNavItem`, use `className="size-full"` and `strokeWidth={1.5}` — the parent component controls the rendered size.
+
+## Naming convention
+
+Lucide icons use PascalCase imports derived from kebab-case file names:
+
+- File: `arrow-up.js` → Import: `ArrowUp`
+- File: `chevron-down.js` → Import: `ChevronDown`
+- File: `more-horizontal.js` → Import: `MoreHorizontal`
+
+## Color
+
+Icons inherit color from their parent via `currentColor` by default. Control icon color through the parent's text color class:
+
+| Context | Parent class | Result |
+|---|---|---|
+| Default | `text-text-primary` | Standard icon color |
+| Secondary/muted | `text-text-secondary` | Reduced emphasis |
+| On brand surface | `text-on-brand` | White icon |
+| Active/selected | `text-brand-primary` | Brand-colored icon |
+| Status | `text-danger`, `text-success` | Semantic color |
+
+```tsx
+{/* Icon inherits text-text-secondary from parent */}
+<span className="text-text-secondary">
+  <Clock size={16} /> 2 hours ago
+</span>
+
+{/* Icon inherits brand color */}
+<span className="text-brand-primary">
+  <Check size={16} /> Selected
+</span>
+```
+
+## Props
+
+All lucide icons accept:
+
+| Prop | Default | Usage |
+|---|---|---|
+| `size` | `24` | Icon dimensions in pixels |
+| `color` | `"currentColor"` | Override color (prefer parent class instead) |
+| `strokeWidth` | `2` | Stroke width — use `1.5` for nav icons |
+| `className` | — | Additional classes (`"size-full"` for container-fill) |
+
+## Rules
+
+IMPORTANT: Do NOT guess icon names. Always verify against `icon-discovery.md` before importing.
+
+- Always import from `lucide-react` — never from `@figma/astraui`
+- Never create inline SVGs — always use lucide icon components
+- Use consistent sizes within the same context — do not mix 16px and 24px icons in the same toolbar or list
+- Use `strokeWidth={1.5}` for icons inside `SidebarButton` and `SecondaryNavItem`
+- Use `className="size-full"` when the parent component controls icon size
+- Control icon color through parent text classes, not the `color` prop
+# Input Styling
+
+## Standard input appearance
+
+All form inputs in Astra share a consistent visual treatment. Use the design system's form components — never raw HTML elements.
+
+| Element | Component | Never use |
+|---|---|---|
+| Text input | `InputField` | `<input>` |
+| Textarea | `TextareaField` | `<textarea>` |
+| Select | `SelectField` | `<select>` |
+| Checkbox | `Checkbox` | `<input type="checkbox">` |
+| Radio | `RadioGroup` | `<input type="radio">` |
+| Toggle | `SwitchField` | Custom toggle |
+
+## Visual treatment
+
+All text inputs, selects, and textareas share these properties:
+
+| Property | Value | Token/Class |
+|---|---|---|
+| Background | Subtle tint | `bg-input-bg` |
+| Text color | Primary | `text-text-primary` |
+| Placeholder color | Tertiary | `text-text-tertiary` |
+| Border radius | 8px | `rounded-corner-md` |
+| Font size | 16px | `text-input` |
+| Small font size | 14px | `text-input-sm` |
+
+### States
+
+| State | Appearance |
+|---|---|
+| Default | `bg-input-bg`, no visible border |
+| Focus | `border-border-selected` or `brand-primary` outline |
+| Disabled | Reduced opacity, `cursor-not-allowed`, no resize (textarea) |
+| Error | `border-danger` border, `text-danger` error message below |
+
+## Labels and descriptions
+
+All form components accept `label` and `description` props for consistent form layout:
+
+```tsx
+<InputField
+  label="Email Address"
+  description="This is your primary contact email"
+  value="sarah@example.com"
+  onChange={(val) => {}}
+/>
+```
+
+- Labels are positioned above the input
+- Descriptions appear below the label, above the input
+- Both use consistent typography and spacing handled by the component
+
+## Prefix and suffix
+
+`InputField` supports `prefix` and `suffix` for icons, units, or short labels inside the input container:
+
+```tsx
+<InputField
+  prefix={<Search size={16} />}
+  suffix="USD"
+  label="Amount"
+  value="100"
+/>
+```
+
+## Layout patterns
+
+### Vertical stack (default)
+```tsx
+<div className="flex flex-col gap-lg">
+  <InputField label="Email" />
+  <InputField label="Username" />
+  <TextareaField label="Bio" />
+</div>
+```
+
+### Side-by-side fields
+```tsx
+<div className="flex gap-xl">
+  <div className="flex-1">
+    <InputField label="First Name" />
+  </div>
+  <div className="flex-1">
+    <InputField label="Last Name" />
+  </div>
+</div>
+```
+
+## Rules
+
+- Always use design system form components — never raw HTML inputs
+- Do not mix input sizing within the same form
+- Labels should be positioned consistently — always above the input
+- Use `gap-lg` (12px) between fields in a vertical stack
+- Use `gap-xl` (16px) between side-by-side fields with `flex-1` children
+- Placeholder text uses `text-text-tertiary` — never use it for actual content
+- All form fields should be inside a `bg-surface-bg` card — never directly on the canvas
+- `InputField` uses a simplified `onChange` signature: `(value: string) => void`, not the native event
+# Modes
+
+## Available modes
+
+| Mode | Activation | Usage |
+|---|---|---|
+| Light | Default (no `.dark` class) | **Default** — standard light appearance |
+| Dark | `.dark` class on `<html>` | Dark appearance, user preference |
+
+Astra supports two modes. All semantic tokens automatically adapt between them.
+
+## How to set mode
+
+### Via ThemeProvider (recommended)
+
+Wrap your app root with `ThemeProvider` — it handles mode switching, persistence, and system preference detection automatically.
+
+```tsx
+import { ThemeProvider } from '@figma/astraui'
+
+<ThemeProvider>
+  <App />
+</ThemeProvider>
+```
+
+`ThemeProvider` reads `localStorage('astra-theme')` on mount and falls back to `prefers-color-scheme`. It adds/removes the `.dark` class on `<html>`.
+
+### Via useTheme hook
+
+Toggle or set the mode from any child component:
+
+```tsx
+import { useTheme } from '@figma/astraui'
+
+function ThemeToggle() {
+  const { theme, toggleTheme, setTheme } = useTheme()
+  return <Button onClick={toggleTheme}>{theme}</Button>
+}
+```
+
+### Manual (without ThemeProvider)
+
+Set the `.dark` class on `<html>` — not `<body>`:
+
+```tsx
+// Correct
+document.documentElement.classList.add('dark')
+
+// Wrong — tokens won't apply
+document.body.classList.add('dark')
+```
+
+## Token behavior across modes
+
+All semantic tokens flip automatically. Examples:
+
+| Token | Light | Dark |
+|---|---|---|
+| `--brand-tertiary` | `#eaeaff` (lavender) | `#161621` (dark navy) |
+| `--surface-bg` | `#ffffff` | `#161621` |
+| `--text-primary` | `rgba(0,0,0,0.85)` | `rgba(255,255,255,0.85)` |
+| `--border-primary` | `rgba(0,0,0,0.15)` | `rgba(255,255,255,0.15)` |
+
+Some tokens stay constant across both modes:
+
+| Token | Value | Why |
+|---|---|---|
+| `--brand-primary` | `#5250f3` | Brand identity is consistent |
+| `--on-brand` | `#ffffff` | Always white on brand surfaces |
+| `--on-reverse` | `#1e1e1e` | Always dark — for elements that must contrast in both modes |
+| `--modal-scrim` | `rgba(0,0,0,0.75)` | Backdrop is always dark |
+
+## Components that need extra attention
+
+Some components appear on surfaces that don't change with mode, or overlay media content. These must work on both light and dark backgrounds regardless of the current mode:
+
+- **FavoriteButton** — overlays video thumbnails, uses `surface-bg` background that adapts
+- **DurationBadge** — overlays video thumbnails, uses `input-bg` background with white text
+- **Tooltip** — uses `surface-dark` background with `on-brand` text in both modes
+
+## Rules
+
+- Always use semantic tokens — never hardcode hex values for colors that should adapt
+- If you use tokens correctly, dark mode support comes for free
+- Test both modes — especially for custom layouts and compositions
+- `on-brand` is always white in both modes — use it for text on `brand-primary` or dark surfaces
+- `on-reverse` is always dark in both modes — use it for elements that must stay dark
+- `text-tertiary` has low contrast in both modes — never use it for critical content
+- `ThemeProvider` must be an ancestor of any component calling `useTheme()`
+# Border Radius Tokens
+
+Corner style: **Rounded** — generous rounding with `corner-md` (8px) as the default.
+
+## Scale
+
+| Token | Value | Tailwind | Frequency | Usage |
+|---|---|---|---|---|
+| `--corner-sm` | 4px | `rounded-corner-sm` | Occasional | Small elements, dot separators, mini badges |
+| `--corner-md` | 8px | `rounded-corner-md` | **Common** | Inputs, badges, toolbar items, ItemCard |
+| `--corner-lg` | 16px | `rounded-corner-lg` | **Dominant** | Content cards, panels, floating overlays, modals |
+| `--corner-full` | 999px | `rounded-corner-full` | Common | Buttons (pill shape), avatars, toggles |
+
+## Decision tree
+
+```
+┌─ "What border radius should I use?"
+│
+├─ SMALL element (badge, dot separator, mini indicator)?
+│  └─ rounded-corner-sm (4px)
+│
+├─ INTERACTIVE ELEMENT (input, select, toolbar item)?
+│  └─ rounded-corner-md (8px)
+│
+├─ CONTENT CARD or PANEL (surface-bg containers)?
+│  └─ rounded-corner-lg (16px) ⭐ Most common for layout
+│
+├─ FLOATING OVERLAY (toolbar, modal, large card)?
+│  └─ rounded-corner-lg (16px)
+│
+├─ BUTTON (pill shape)?
+│  └─ rounded-corner-full (999px)
+│
+└─ AVATAR or CIRCULAR ELEMENT?
+   └─ rounded-corner-full (999px)
+```
+
+## Component-to-radius mapping
+
+| Component | Radius | Token |
+|---|---|---|
+| Button | pill | `rounded-corner-full` |
+| InputField, SelectField, TextareaField | 8px | `rounded-corner-md` |
+| Content cards (`bg-surface-bg` containers) | 16px | `rounded-corner-lg` |
+| ItemCard | 8px | `rounded-corner-md` |
+| Modal | 16px | `rounded-corner-lg` |
+| Toolbar | 16px | `rounded-corner-lg` |
+| ToolbarItem | 8px | `rounded-corner-md` |
+| Badge | 8px | `rounded-corner-md` |
+| DurationBadge | 8px | `rounded-corner-md` |
+| Avatar (circle) | pill | `rounded-corner-full` |
+| Avatar (square) | 8px | `rounded-corner-md` |
+| Tooltip | 8px | `rounded-corner-md` (uses `rounded-lg`) |
+
+## Rules
+
+- Use `rounded-corner-lg` (16px) for content cards and panels — this is the standard card shape
+- Use `rounded-corner-md` (8px) for interactive elements and smaller components
+- Use `rounded-corner-full` (999px) for buttons and circular elements
+- Nested elements should use equal or smaller radius than their parent
+- Do not use arbitrary border-radius values — every rounded corner should use a token from this scale
+
+```tsx
+{/* CORRECT — card uses corner-lg */}
+<div className="bg-surface-bg rounded-corner-lg p-xl">
+  <InputField label="Name" />
+</div>
+
+{/* WRONG — arbitrary radius */}
+<div className="bg-surface-bg rounded-[12px] p-xl">
+  <InputField label="Name" />
+</div>
+```
+# Spacing Tokens
+
+## Scale
+
+Base-4 system. Astra uses a compact-but-breathable density — generous whitespace without feeling cramped.
+
+| Value | Token | Tailwind | Frequency | Usage |
+|---|---|---|---|---|
+| 4px | `--space-xs` | `gap-xs`, `p-xs`, `m-xs` | Common | Tight inline gaps, metadata items, title-to-subtitle |
+| 6px | `--space-sm` | `gap-sm`, `p-sm`, `m-sm` | Occasional | Small vertical gaps, badge padding, nav item spacing |
+| 8px | `--space-md` | `gap-md`, `p-md`, `m-md` | Common | Component internal gaps, toolbar gaps, default tight spacing |
+| 12px | `--space-lg` | `gap-lg`, `p-lg`, `m-lg` | **Dominant** | Fields inside cards, component internal padding, related groups |
+| 16px | `--space-xl` | `gap-xl`, `p-xl`, `m-xl` | **Dominant** | Card padding, between section cards, side-by-side fields |
+| 24px | `--space-2xl` | `gap-2xl`, `p-2xl`, `m-2xl` | Common | Page-level padding, major section separation |
+
+The dominant spacing values are `space-lg` (12px) and `space-xl` (16px). When in doubt, use `gap-lg` within components and `gap-xl` between sections.
+
+## Decision tree
+
+```
+┌─ "What spacing should I use?"
+│
+├─ TIGHT inline gap (related metadata, title → subtitle)?
+│  └─ space-xs (4px) — e.g., mt-xs between page title and description
+│
+├─ SMALL component internal gap (badge padding, nav items)?
+│  └─ space-sm (6px) or space-md (8px)
+│
+├─ FIELDS inside a card (between form fields)?
+│  └─ space-lg (12px) ⭐ — flex flex-col gap-lg
+│
+├─ CARD PADDING (inside each card)?
+│  └─ space-xl (16px) — p-xl
+│
+├─ BETWEEN SECTION CARDS (card stack)?
+│  └─ space-xl (16px) — flex flex-col gap-xl
+│
+├─ SIDE-BY-SIDE FIELDS (first name + last name)?
+│  └─ space-xl (16px) — flex gap-xl
+│
+├─ BELOW SECTION HEADING inside a card?
+│  └─ space-lg (12px) — mb-lg
+│
+├─ BELOW PAGE HEADER (before card stack)?
+│  └─ space-xl (16px) — mb-xl
+│
+├─ PAGE-LEVEL PADDING (main content area)?
+│  └─ space-2xl (24px) — p-2xl
+│
+└─ BETWEEN MAJOR DASHBOARD SECTIONS?
+   └─ space-2xl (24px) — gap-2xl
+```
+
+## Quick reference by context
+
+| Context | Token | Value | Tailwind |
+|---|---|---|---|
+| Main content padding | `space-2xl` | 24px | `p-2xl` |
+| Between section cards | `space-xl` | 16px | `gap-xl` |
+| Between dashboard sections | `space-2xl` | 24px | `gap-2xl` |
+| Inside cards (padding) | `space-xl` | 16px | `p-xl` |
+| Between fields inside a card | `space-lg` | 12px | `gap-lg` |
+| Between side-by-side fields | `space-xl` | 16px | `gap-xl` |
+| Below section heading in card | `space-lg` | 12px | `mb-lg` |
+| Below page header | `space-xl` | 16px | `mb-xl` |
+| Page header title to subtitle | `space-xs` | 4px | `mt-xs` |
+
+## Rules
+
+IMPORTANT: Spacing is NOT optional. If cards or fields are touching with no gap, the layout is wrong. Always use flexbox with gap tokens.
+
+- Always use spacing tokens — never hardcode pixel values
+- Use `flex flex-col gap-lg` between fields inside a card
+- Use `flex flex-col gap-xl` between section cards
+- Use `flex gap-xl` with `flex-1` children for side-by-side fields
+- All spacing values must come from this scale — do not use values like 5px, 10px, 15px, or 18px
+- Always use `p-2xl` on the `<main>` content area — content must never touch edges
+# Surface Tokens
+
+## Background strategy
+
+Astra uses a **layered surface strategy** — visual hierarchy is achieved through background color variation, not borders. A branded `brand-tertiary` canvas provides ambient identity, with `surface-bg` cards floating on top.
+
+| Token | Tailwind | Frequency | Usage |
+|---|---|---|---|
+| `--brand-tertiary` | `bg-brand-tertiary` | **Dominant** | Page background canvas |
+| `--surface-bg` | `bg-surface-bg` | **Dominant** | Cards, panels, sidebar, elevated content |
+| `--surface-secondary-bg` | `bg-surface-secondary-bg` | Common | Secondary navigation panel |
+| `--bg-faint` | `bg-bg-faint` | Occasional | Recessed areas within cards |
+| `--bg-subtle` | `bg-bg-subtle` | Occasional | Subtle grouping, input backgrounds |
+| `--input-bg` | `bg-input-bg` | Common | Input field backgrounds |
+| `--surface-hover` | `bg-surface-hover` | Interactive | Hover states on regions |
+| `--bg-hover` | `bg-bg-hover` | Interactive | Hover states on tinted areas |
+
+## Surface layering
+
+Astra's surface hierarchy stacks from bottom to top:
+
+```
+brand-tertiary        → page background canvas (branded lavender)
+surface-bg            → elevated content (cards, panels, forms, sidebar)
+surface-secondary-bg  → secondary navigation panel
+bg-faint              → recessed areas within elevated surfaces
+bg-subtle             → subtle grouping within elevated surfaces
+input-bg              → input field backgrounds
+surface-hover         → hover state for interactive regions
+```
+
+The key principle: **the branded canvas provides identity, elevated surfaces provide hierarchy.** Content cards in `surface-bg` visually "float" on the `brand-tertiary` background — this contrast is what creates separation without borders.
+
+## Separation strategy
+
+Use **surface color contrast** to define content regions, not borders:
+
+```tsx
+{/* CORRECT — surface color separation (dominant pattern) */}
+<main className="bg-brand-tertiary p-2xl">
+  <div className="bg-surface-bg rounded-corner-lg p-xl">
+    {/* Card floats on canvas — color contrast creates separation */}
+  </div>
+</main>
+
+{/* AVOID — adding unnecessary borders to cards on the canvas */}
+<main className="bg-brand-tertiary p-2xl">
+  <div className="bg-surface-bg border border-border-primary rounded-corner-lg p-xl">
+    {/* Border is redundant — the surface contrast already separates */}
+  </div>
+</main>
+```
+
+Borders are reserved for:
+- Interactive elements (inputs, buttons, clickable cards)
+- The sidebar navigation (uses `border-r border-border-primary`)
+- Floating overlays (toolbar, modal — `border-border-primary` + shadow)
+- Explicit content boundaries within interactive components
+
+## Surface stacking decision tree
+
+```
+┌─ "How should I layer this surface?"
+│
+├─ Page canvas (main content area)?
+│  └─ bg-brand-tertiary — always the base layer
+│
+├─ Card or panel on the canvas?
+│  └─ bg-surface-bg rounded-corner-lg p-xl
+│     Color contrast with canvas creates separation
+│
+├─ Sidebar navigation?
+│  └─ bg-surface-bg with border-r border-border-primary
+│
+├─ Secondary navigation panel?
+│  └─ bg-surface-secondary-bg with border-r border-border-primary
+│
+├─ Recessed area within a card (metadata, grouped content)?
+│  └─ bg-bg-faint or bg-bg-subtle
+│
+├─ Input field within a card?
+│  └─ bg-input-bg (handled by InputField component)
+│
+├─ Modal or overlay?
+│  └─ bg-surface-bg + shadow + bg-modal-scrim backdrop
+│     Modal component handles this internally
+│
+└─ Hover state on an interactive surface?
+   └─ bg-surface-hover or bg-bg-hover
+```
+
+## Surface separation decision tree
+
+```
+┌─ "How should I visually separate two adjacent regions?"
+│
+├─ Content card on page canvas?
+│  └─ Surface color contrast (bg-surface-bg on bg-brand-tertiary)
+│     No border needed — the color difference is enough
+│
+├─ Side-by-side panels (sidebar | content)?
+│  └─ border-r border-border-primary on the left panel
+│
+├─ Stacked section cards (vertical)?
+│  └─ Spacing gap — flex flex-col gap-xl
+│     Each card is its own bg-surface-bg container
+│
+├─ Nested region within a card?
+│  └─ bg-bg-faint or bg-bg-subtle background
+│     Must be visually distinct from parent surface-bg
+│
+└─ Interactive card (ItemCard, clickable)?
+   └─ border-border-primary border on the card
+      Borders communicate interactivity
+```
+
+## Common mistakes
+
+```tsx
+{/* WRONG — white/gray page background instead of branded canvas */}
+<main className="bg-white p-2xl">
+  {/* Missing brand identity — must use bg-brand-tertiary */}
+</main>
+
+{/* WRONG — content directly on canvas without elevation */}
+<main className="bg-brand-tertiary p-2xl">
+  <InputField label="Name" />
+  {/* Form fields should be inside a surface-bg card */}
+</main>
+
+{/* CORRECT — card elevated on canvas */}
+<main className="bg-brand-tertiary p-2xl">
+  <div className="bg-surface-bg rounded-corner-lg p-xl">
+    <InputField label="Name" />
+  </div>
+</main>
+
+{/* WRONG — borders between layout regions where color handles it */}
+<div className="bg-brand-tertiary border-l border-border-primary">
+  {/* The surface color change from sidebar already separates */}
+</div>
+
+{/* WRONG — brand-primary as a large surface */}
+<div className="bg-brand-primary p-2xl">
+  <h2 className="text-on-brand">Welcome</h2>
+  {/* brand-primary is for small accents, not section backgrounds */}
+</div>
+```
+
+## Rules
+
+- The page canvas is ALWAYS `bg-brand-tertiary` — never white or gray
+- Content cards and panels use `bg-surface-bg` and float on the canvas
+- Surface color contrast is the primary separation tool — not borders
+- Borders are for interactive elements and explicit panel edges only
+- Never place form fields or content directly on the canvas — wrap in a `bg-surface-bg` card
+- Each logical section gets its own `bg-surface-bg rounded-corner-lg p-xl` card
+# Typography Tokens
+
+## Font families
+
+Astra uses a single font family for all UI text:
+
+| Family | Token | Tailwind | Usage |
+|---|---|---|---|
+| Instrument Sans | `font-sans` | `font-sans` | **All UI text** — body, labels, inputs |
+| Instrument Sans | `font-display` | `font-display` | Titles (same family, used semantically) |
+
+Both `font-sans` and `font-display` resolve to `'Instrument Sans', system-ui, sans-serif`. Do not use other font families directly.
+
+## Type scale
+
+Astra uses composite typography classes that bundle size, weight, line height, and extras together. Always use these classes — do not set font-size independently.
+
+| Class | Size | Weight | Line Height | Usage |
+|---|---|---|---|---|
+| `text-title` | 24px | 600 (SemiBold) | 1.4 | Page titles, major headings |
+| `text-heading` | 20px | 500 (Medium) | 1.4 | Section headings |
+| `text-caption` | 20px | 600 (SemiBold) | 1.4 | Uppercase captions |
+| `text-label` | 16px | 500 (Medium) | 1.4 | Form labels, card section headings, button text |
+| `text-label-sm` | 14px | 500 (Medium) | 1.4 | Descriptions, helper text, secondary labels |
+| `text-input` | 16px | 400 (Regular) | 1.4 | Input field values |
+| `text-input-sm` | 14px | 500 (Medium) | 1.4 | Small input values, DurationBadge text |
+| `text-video-title` | 12px | 400 (Regular) | normal | Metadata, timestamps, smallest text |
+
+The dominant text sizes are 16px (`text-label`) and 14px (`text-label-sm`). Do not use arbitrary font sizes — every text element should map to a class from this scale.
+
+## Font weights
+
+| Tailwind | Weight | Usage |
+|---|---|---|
+| `font-book` | 450 | Occasional — between regular and medium |
+| `font-medium` | 500 | **Default for labels and UI text** |
+| `font-semibold` | 600 | Titles, section headings, strong emphasis |
+
+Most UI text uses `font-medium` (500) via the composite type classes. Do not use weights outside this set (no 300, 700, 800, or 900).
+
+## Decision tree
+
+```
+┌─ "What typography class should I use?"
+│
+├─ PAGE TITLE (top of page, one per view)?
+│  └─ text-title (24px semibold)
+│
+├─ SECTION HEADING (within page content)?
+│  └─ text-heading (20px medium)
+│
+├─ UPPERCASE CAPTION or label?
+│  └─ text-caption (20px semibold, uppercase)
+│
+├─ CARD SECTION HEADING or form label?
+│  └─ text-label (16px medium)
+│
+├─ DESCRIPTION, helper text, or secondary info?
+│  └─ text-label-sm (14px medium)
+│
+├─ INPUT FIELD VALUE?
+│  └─ text-input (16px regular)
+│
+├─ SMALL INPUT or compact field?
+│  └─ text-input-sm (14px medium)
+│
+└─ METADATA, timestamp, or fine print?
+   └─ text-video-title (12px regular)
+```
+
+## Line height
+
+All composite type classes include a paired line height of `1.4` (except `text-video-title` which uses `normal`). Do not override line height independently.
+
+```tsx
+{/* CORRECT — use the composite class */}
+<h1 className="text-title text-text-primary">Page Title</h1>
+
+{/* WRONG — arbitrary size and line height */}
+<h1 className="text-2xl leading-8 font-semibold">Page Title</h1>
+```
+
+## Common patterns
+
+### Page header
+```tsx
+<h1 className="text-title text-text-primary">Profile</h1>
+<p className="text-label-sm text-text-secondary mt-xs">Manage your account settings</p>
+```
+
+### Card section heading
+```tsx
+<h2 className="text-label text-text-primary font-semibold mb-lg">Personal Information</h2>
+```
+
+### Metadata row
+```tsx
+<span className="text-video-title text-text-primary">Edited 2m ago</span>
+```
+
+## Rules
+
+- Always use composite type classes (`text-title`, `text-label`, etc.) — never set `font-size` directly
+- Do not use Tailwind's default size classes (`text-sm`, `text-base`, `text-lg`) — use Astra's type scale
+- Text color is separate — pair type classes with `text-text-primary`, `text-text-secondary`, or `text-text-tertiary`
+- Reduce importance through scale (smaller type class), not opacity — use `text-video-title` at `text-text-primary` rather than `text-label` at `text-text-tertiary`
+
+--- DS composition ---
+# Layout Structure
+
+## Container hierarchy
+
+Pages should have clear nesting depth — the canvas contains cards, cards contain content. Aim for 2–3 levels of visible nesting:
+
+```
+Page canvas (brand-tertiary)
+└── Section card (surface-bg, rounded-corner-lg, p-xl)
+    └── Content (text, inputs, buttons)
+        └── Optional: recessed area (bg-faint or bg-subtle)
+```
+
+Do not create flat pages where all content sits at the same level. Do not over-nest — more than 3 levels of visible containers creates clutter.
+
+## Page structure
+
+Every desktop page follows this structure:
+
+```tsx
+<div className="flex h-screen">
+  {/* Primary nav — always present */}
+  <SidebarNavigation footer={...}>
+    <SidebarButton icon={<Home className="size-full" strokeWidth={1.5} />} />
+    ...
+  </SidebarNavigation>
+
+  {/* Secondary nav — optional, for pages with sub-sections */}
+  <SecondaryNav title="...">
+    <SecondaryNavItem icon={...} label="..." />
+  </SecondaryNav>
+
+  {/* Main content — always brand-tertiary */}
+  <main className="flex-1 bg-brand-tertiary p-2xl overflow-y-auto">
+    {/* Page header — on canvas, not in a card */}
+    <div className="mb-xl">
+      <h1 className="text-title text-text-primary">Page Title</h1>
+      <p className="text-label-sm text-text-secondary mt-xs">Description</p>
+    </div>
+
+    {/* Card stack — each section = separate card */}
+    <div className="flex flex-col gap-xl max-w-3xl">
+      <div className="bg-surface-bg rounded-corner-lg p-xl">
+        {/* Section content */}
+      </div>
+      <div className="bg-surface-bg rounded-corner-lg p-xl">
+        {/* Section content */}
+      </div>
+    </div>
+  </main>
+</div>
+```
+
+## Card stack pattern
+
+For form pages and settings:
+
+- Each logical section gets its own `surface-bg` card
+- Cards are separated by `gap-xl` (16px) — use `flex flex-col gap-xl`
+- Inside each card: `flex flex-col gap-lg` (12px) between fields
+- Section heading goes inside its card as the first element
+- Page header sits on the canvas above the card stack
+
+```tsx
+<div className="flex flex-col gap-xl max-w-3xl">
+  {/* Card 1 */}
+  <div className="bg-surface-bg rounded-corner-lg p-xl">
+    <h2 className="text-label text-text-primary font-semibold mb-lg">Profile Photo</h2>
+    <div className="flex items-center gap-lg">
+      <Avatar type="initial" initials="SC" size="large" />
+      <Button variant="neutral" size="small">Change Photo</Button>
+    </div>
+  </div>
+
+  {/* Card 2 */}
+  <div className="bg-surface-bg rounded-corner-lg p-xl">
+    <h2 className="text-label text-text-primary font-semibold mb-lg">Personal Information</h2>
+    <div className="flex flex-col gap-lg">
+      <div className="flex gap-xl">
+        <div className="flex-1"><InputField label="First Name" /></div>
+        <div className="flex-1"><InputField label="Last Name" /></div>
+      </div>
+      <InputField label="Email" />
+    </div>
+  </div>
+</div>
+```
+
+## Content grid pattern
+
+For dashboards and media galleries:
+
+```tsx
+<div className="flex flex-col gap-2xl">
+  {/* Header row */}
+  <div className="flex items-center justify-between">
+    <h1 className="text-title text-text-primary">Dashboard</h1>
+    <div className="flex items-center gap-lg">
+      <SearchComponent placeholder="Search" />
+      <Button variant="primary">New Project</Button>
+    </div>
+  </div>
+
+  {/* Card grid */}
+  <div>
+    <h2 className="text-heading text-text-primary mb-lg">Recently Viewed</h2>
+    <div className="grid grid-cols-4 gap-xl">
+      <ItemCard title="Video 1" duration="0:01:30" />
+      <ItemCard title="Video 2" duration="0:02:15" />
+      <ItemCard title="Video 3" duration="0:00:45" />
+      <ItemCard title="Video 4" duration="0:03:00" />
+    </div>
+  </div>
+</div>
+```
+
+## Two-column layout pattern
+
+For pages with a main content area and a side panel:
+
+```tsx
+<div className="flex gap-xl">
+  <div className="flex-1 bg-surface-bg rounded-corner-lg p-xl">
+    {/* Main content */}
+  </div>
+  <div className="w-[320px] bg-surface-bg rounded-corner-lg p-xl">
+    {/* Side panel */}
+  </div>
+</div>
+```
+
+## List repetition consistency
+
+Repeated items in a list must be visually identical:
+
+- Same height, padding, and layout for every row
+- Same icon size and position in every item
+- Same typography and color treatment for every label
+- If one item has a badge or status indicator, allocate the same space in every item (even if empty)
+
+## Grid cell uniformity
+
+Cards or tiles in a grid must have:
+
+- Equal width — use `grid-template-columns: repeat(n, 1fr)`
+- Equal height — grid handles this by default with `align-items: stretch`
+- Consistent internal padding
+- Same content structure in every card
+
+## Rules
+
+- Every page starts with `SidebarNavigation` — no exceptions
+- Main content uses `bg-brand-tertiary` with `p-2xl` and `overflow-y-auto`
+- Each logical section gets its own `bg-surface-bg rounded-corner-lg p-xl` card
+- Never combine unrelated sections in one card
+- Use `max-w-3xl` on form card stacks to prevent overly wide forms
+- Use `flex flex-col gap-xl` between cards, `flex flex-col gap-lg` between fields
+- Page header sits on the canvas, not inside a card
+# Surfaces
+
+## Visible layering
+
+Every content region must have a clear visual surface. The user should be able to identify distinct areas at a glance.
+
+- The page canvas is always `bg-brand-tertiary` — this is the base layer
+- Content cards and panels use `bg-surface-bg` — they float on the canvas
+- Do not place content directly on the canvas without a `surface-bg` container
+- Navigation panels use their own surface tokens (`surface-bg` for sidebar, `surface-secondary-bg` for secondary nav)
+
+## Contrast stacking
+
+When stacking surfaces, adjacent layers must have sufficient visual contrast:
+
+| Boundary | Separation method |
+|---|---|
+| Canvas → card | Background color contrast (`brand-tertiary` → `surface-bg`) |
+| Sidebar → content | `border-r border-border-primary` on the sidebar |
+| SecondaryNav → content | `border-r border-border-primary` on the nav panel |
+| Card → recessed area | Background step (`surface-bg` → `bg-faint` or `bg-subtle`) |
+| Card → input field | `bg-input-bg` inside the input component |
+| Page → modal | `bg-modal-scrim` backdrop + `surface-bg` modal |
+
+Do not use both a border and a background color change at the same boundary — pick one. For Astra, surface color contrast is the primary tool; borders are the exception for panel edges.
+
+```tsx
+{/* CORRECT — surface color creates separation */}
+<main className="bg-brand-tertiary p-2xl">
+  <div className="bg-surface-bg rounded-corner-lg p-xl">
+    {/* Content is visually distinct from canvas */}
+  </div>
+</main>
+
+{/* WRONG — card on canvas with redundant border */}
+<main className="bg-brand-tertiary p-2xl">
+  <div className="bg-surface-bg border border-border-primary rounded-corner-lg p-xl">
+    {/* Border is unnecessary — color contrast already separates */}
+  </div>
+</main>
+
+{/* WRONG — content directly on canvas */}
+<main className="bg-brand-tertiary p-2xl">
+  <InputField label="Name" />
+  {/* No containing surface — fields float unstyled */}
+</main>
+```
+
+## Elevation stacking
+
+| Level | Use for | Astra implementation |
+|---|---|---|
+| 0 | Page canvas | `bg-brand-tertiary` |
+| 1 | Cards, panels, sidebar | `bg-surface-bg` (no shadow) |
+| 2 | Floating toolbar | `bg-surface-bg` + shadow + border |
+| 3 | Modal | `bg-surface-bg` + `bg-modal-scrim` backdrop |
+
+Modals always use the highest elevation. Do not nest elevated surfaces more than 2 levels deep.
+
+## Overflow
+
+Content must not overflow its container:
+
+- The main content area uses `overflow-y-auto` for vertical scrolling
+- Sidebars scroll independently from the main content
+- Long text should truncate with ellipsis or wrap — never overflow horizontally
+- Modal content that exceeds viewport height scrolls internally (handled by Modal component)
+
+```tsx
+{/* CORRECT — independent scrolling regions */}
+<div className="flex h-screen">
+  <SidebarNavigation>{/* fixed height, internal scroll */}</SidebarNavigation>
+  <SecondaryNav title="Settings">{/* full height, internal scroll */}</SecondaryNav>
+  <main className="flex-1 bg-brand-tertiary p-2xl overflow-y-auto">
+    {/* Main content scrolls independently */}
+  </main>
+</div>
+```
+
+## Rules
+
+- Every content region must sit on a visible surface — no unstyled floating content
+- Surface color contrast is the primary separation tool, not borders
+- Do not add shadows to cards or panels — only floating overlays get shadows
+- Each panel in the layout scrolls independently
+- Do not nest visible containers more than 3 levels deep
+
+--- Payload public extension type locations ---
+node_modules/payload/dist/collections/config/types.d.ts:309:        edit?: {
+node_modules/payload/dist/collections/config/types.d.ts:317:        views?: {
+node_modules/payload/dist/collections/config/types.d.ts:322:            list?: {
+node_modules/@payloadcms/ui/dist/exports/client/index.d.ts:152:export { Wrapper as DefaultTemplateWrapper } from '../../templates/Default/Wrapper/index.js';
+node_modules/payload/dist/config/types.d.ts:835:        afterNav?: CustomComponent[];
+node_modules/payload/dist/config/types.d.ts:851:        beforeNav?: CustomComponent[];
+node_modules/payload/dist/config/types.d.ts:875:        Nav?: CustomComponent;
+node_modules/payload/dist/config/types.d.ts:879:        providers?: PayloadComponent<{
+node_modules/payload/dist/config/types.d.ts:906:        views?: {
+node_modules/payload/dist/config/types.d.ts:910:            account?: AdminViewConfig;
+node_modules/payload/dist/config/types.d.ts:912:            dashboard?: AdminViewConfig;
+node_modules/payload/dist/config/types.d.ts:928:    dashboard?: DashboardConfig;
+node_modules/payload/dist/config/types.d.ts:978:        account?: `/${string}`;
+node_modules/payload/dist/config/types.d.ts:1529:    dashboard: Required<DashboardConfig>;
+node_modules/payload/dist/config/types.d.ts:1660:     * views: {
+node_modules/payload/dist/config/types.d.ts:1678:    edit?: EditConfig;
+node_modules/payload/dist/config/types.d.ts:1693:    edit?: SharedEditViewComponents;
+node_modules/payload/dist/config/types.d.ts:1694:    views?: SharedEntityViews;
+node_modules/@payloadcms/ui/dist/exports/rsc/index.d.ts:19:export { DefaultTemplate, type DefaultTemplateProps } from '../../templates/Default/index.js';
+
+--- baseline app types ---
+/* tslint:disable */
+/* eslint-disable */
+/**
+ * This file was automatically generated by Payload.
+ * DO NOT MODIFY IT BY HAND. Instead, modify your source Payload config,
+ * and re-run `payload generate:types` to regenerate this file.
+ */
+
+/**
+ * Supported timezones in IANA format.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "supportedTimezones".
+ */
+export type SupportedTimezones =
+  | 'Pacific/Midway'
+  | 'Pacific/Niue'
+  | 'Pacific/Honolulu'
+  | 'Pacific/Rarotonga'
+  | 'America/Anchorage'
+  | 'Pacific/Gambier'
+  | 'America/Los_Angeles'
+  | 'America/Tijuana'
+  | 'America/Denver'
+  | 'America/Phoenix'
+  | 'America/Chicago'
+  | 'America/Guatemala'
+  | 'America/New_York'
+  | 'America/Bogota'
+  | 'America/Caracas'
+  | 'America/Santiago'
+  | 'America/Buenos_Aires'
+  | 'America/Sao_Paulo'
+  | 'Atlantic/South_Georgia'
+  | 'Atlantic/Azores'
+  | 'Atlantic/Cape_Verde'
+  | 'Europe/London'
+  | 'Europe/Berlin'
+  | 'Africa/Lagos'
+  | 'Europe/Athens'
+  | 'Africa/Cairo'
+  | 'Europe/Moscow'
+  | 'Asia/Riyadh'
+  | 'Asia/Dubai'
+  | 'Asia/Baku'
+  | 'Asia/Karachi'
+  | 'Asia/Tashkent'
+  | 'Asia/Calcutta'
+  | 'Asia/Dhaka'
+  | 'Asia/Almaty'
+  | 'Asia/Jakarta'
+  | 'Asia/Bangkok'
+  | 'Asia/Shanghai'
+  | 'Asia/Singapore'
+  | 'Asia/Tokyo'
+  | 'Asia/Seoul'
+  | 'Australia/Brisbane'
+  | 'Australia/Sydney'
+  | 'Pacific/Guam'
+  | 'Pacific/Noumea'
+  | 'Pacific/Auckland'
+  | 'Pacific/Fiji';
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LexicalNodes_408D056C".
+ */
+export type LexicalNodes_408D056C =
+  | SerializedTextNode
+  | SerializedTabNode
+  | SerializedLineBreakNode
+  | SerializedParagraphNode<LexicalNodes_408D056C>
+  | SerializedHorizontalRuleNode
+  | SerializedUploadNode<'media'>
+  | SerializedQuoteNode<LexicalNodes_408D056C>
+  | SerializedRelationshipNode<
+      | 'admins'
+      | 'folders'
+      | 'tags'
+      | 'posts'
+      | 'payload-kv'
+      | 'payload-locked-documents'
+      | 'payload-preferences'
+      | 'payload-migrations'
+    >
+  | SerializedAutoLinkNode<LexicalNodes_408D056C, LexicalLinkFields>
+  | SerializedLinkNode<LexicalNodes_408D056C, LexicalLinkFields>
+  | SerializedListNode<LexicalNodes_408D056C>
+  | SerializedListItemNode<LexicalNodes_408D056C>
+  | SerializedHeadingNode<LexicalNodes_408D056C>;
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LexicalNodes_3DE324E4".
+ */
+export type LexicalNodes_3DE324E4 =
+  | SerializedTextNode
+  | SerializedTabNode
+  | SerializedLineBreakNode
+  | SerializedParagraphNode<LexicalNodes_3DE324E4>
+  | SerializedListNode<LexicalNodes_3DE324E4>
+  | SerializedListItemNode<LexicalNodes_3DE324E4>
+  | SerializedHeadingNode<LexicalNodes_3DE324E4, 'h2' | 'h3' | 'h4'>;
+
+export interface Config {
+  auth: {
+    admins: AdminAuthOperations;
+  };
+  blocks: {};
+  collections: {
+    admins: Admin;
+    media: Media;
+    folders: Folder;
+    tags: Tag;
+    posts: Post;
+    'payload-kv': PayloadKv;
+    'payload-locked-documents': PayloadLockedDocument;
+    'payload-preferences': PayloadPreference;
+    'payload-migrations': PayloadMigration;
+    'payload-llm-instructions': PayloadLlmInstruction;
+  };
+  collectionsJoins: {};
+  collectionsSelect: {
+    admins: AdminsSelect<false> | AdminsSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
+    folders: FoldersSelect<false> | FoldersSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
+    posts: PostsSelect<false> | PostsSelect<true>;
+    'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
+    'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
+    'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
+    'payload-llm-instructions': PayloadLlmInstructionsSelect<false> | PayloadLlmInstructionsSelect<true>;
+  };
+  db: {
+    defaultIDType: string;
+  };
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | 'en' | 'en'[];
+  globals: {};
+  globalsSelect: {};
+  locale: 'en';
+  widgets: {
+    welcome: WelcomeWidget;
+    collections: CollectionsWidget;
+    'collection-query': CollectionQueryWidget;
+    activity: ActivityWidget;
+    'upload-dropzone': UploadDropzoneWidget;
+  };
+  user: Admin;
+  jobs: {
+    tasks: unknown;
+    workflows: unknown;
+  };
+}
+export interface AdminAuthOperations {
+  forgotPassword: {
+    email: string;
+    password: string;
+  };
+  login: {
+    email: string;
+    password: string;
+  };
+  registerFirstUser: {
+    email: string;
+    password: string;
+  };
+  unlock: {
+    email: string;
+    password: string;
+  };
+}
+
+--- page motion and anonymous display copy ---
+styles/global.css:566:.page-enter { animation: page-enter var(--blog-duration-long) var(--blog-ease) both; }
+styles/global.css:567:@keyframes page-enter { from { opacity: 0; transform: translateY(var(--space-md)); } to { opacity: 1; transform: translateY(0); } }
+styles/global.css:786:@media (prefers-reduced-motion: reduce) {
+src/payload.config.ts:4:import { en as adminLanguage } from '@payloadcms/translations/languages/en'
+src/payload.config.ts:16:  admin: {
+src/payload.config.ts:32:    supportedLanguages: { 'en': adminLanguage },
+src/content/site.ts:7:  siteTitle: "开发者的手记",
+src/content/site.ts:9:  authorName: "开发者",
+src/content/site.ts:13:  bio: "一名喜欢把想法变成现实的开发者。关注 Go、Rust、音视频技术与跨平台桌面应用，在这里分享实践、思考，以及构建过程中的小小发现。",
+src/content/articles/go-graceful-shutdown.ts:50:        "长期连接、后台任务和自建 goroutine 不一定在 HTTP 服务的管理范围内，需要明确注册到自己的生命周期协调器。每个模块提供停止接收和等待完成两个动作，通常比暴露一个含义不清的 Close 更容易组织。等待期限耗尽后可以强制结束，但要留下足够的诊断信息。",
+src/content/articles/go-graceful-shutdown.ts:70:        ["等待在途请求，广播后台任务退出信号。"],
+src/content/articles/go-context-cancellation.ts:15:        "在一个服务里，最难发现的浪费往往来自已经没有人等待的工作：请求结束了，查询还在运行；窗口关闭了，后台任务还在重试。context 的作用，是让一组有关联的操作共享生命周期，而不是给每个函数增加一个看起来规范的参数。",
+src/content/articles/go-context-cancellation.ts:83:        "测试取消行为不应只断言返回了一个错误，还要确认后台 goroutine 能退出、资源能够释放、后续步骤没有继续发生。可以使用通知通道控制任务到达某个阶段，再触发取消，以免测试依赖不稳定的 sleep。对于外部 API，使用可控制的本地测试服务制造阻塞。",
+src/views/AboutPage.tsx:27:    <div className="about-page page-enter">
+src/views/DesignSystemPage.tsx:51:    <div className="design-system-page page-enter">
+src/views/HomePage.tsx:26:    <div className="home-page page-enter">
+src/views/ProjectsPage.tsx:10:    <div className="projects-page page-enter">
+src/views/ArticlePage.tsx:31:    <article className="article-page page-enter">
+src/views/NotFoundPage.tsx:8:    <div className="not-found-page page-enter">
+src/views/BlogPage.tsx:26:    <div className="blog-page page-enter">
+src/collections/Admins.ts:3:const isPayloadAdmin: Access = ({ req }) => req.user?.collection === 'admins'
+src/collections/Admins.ts:6:  slug: 'admins',
+src/collections/Admins.ts:13:  admin: {
+src/collections/Posts.ts:5:  admin: {
+src/collections/Folders.ts:5:  admin: {
+src/collections/Tags.ts:5:  admin: {
+src/app/(payload)/custom.scss:1:// Add custom Payload admin styles here
+src/app/(payload)/layout.tsx:9:import { importMap } from './admin/importMap.js'
+src/app/(payload)/admin/logout/route.ts:4:// Payload's default /admin/logout lands on /admin/login, which the Make
+src/app/(payload)/admin/logout/route.ts:16:  redirect(`/api/admins/sso/logout?redirect=${encodeURIComponent(logoutRedirect)}`)

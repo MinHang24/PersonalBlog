@@ -1,0 +1,1968 @@
+
+--- VIEWS ---
+"use client"
+
+import { Avatar, Badge } from "@figma/astraui"
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Code2,
+  Command,
+  Coffee,
+  FileText,
+  Layers,
+  Sparkles,
+} from "lucide-react"
+import { articles } from "../content/articles"
+import { projects } from "../content/projects"
+import { site } from "../content/site"
+import type { Category } from "../content/types"
+import { categoryLabel, formatDate } from "../lib/articles"
+import { AppLink, GlassSurface, TextLink, Typography } from "../components/ui"
+import { CategoryIcon } from "../components/CategoryIcon"
+import { DesktopPreview } from "../components/DesktopPreview"
+
+export function HomePage() {
+  const featured = projects.find((project) => project.featured)!
+  return (
+    <div className="home-page page-enter">
+      <div className="home-intro-line">
+        <span>
+          <span className="status-dot" />
+          一个关于代码、创造与好奇心的地方
+        </span>
+        <span className="intro-date">
+          EST. 2025 <span> / </span> PERSONAL BLOG
+        </span>
+      </div>
+      <div className="bento-grid">
+        <GlassSurface className="hero-card bento-hero">
+          <div className="hero-hello">
+            <Avatar
+              type={site.avatarUrl ? "image" : "initial"}
+              src={site.avatarUrl || undefined}
+              initials={site.initials}
+              size="medium"
+              alt={site.authorName}
+            />
+            <span>
+              你好，我是{site.authorName}
+              <span className="hello-divider"> / </span>
+              <span className="hero-role">乐于构建，也乐于分享</span>
+            </span>
+          </div>
+          <Typography as="h1" variant="hero">
+            把想法，做成
+            <br />
+            <span className="hero-highlight">好用的软件。</span>
+          </Typography>
+          <Typography className="hero-description">
+            在 Go 与 Rust 之间探索，在代码与体验之间打磨。
+            <br className="desktop-break" />
+            记录音视频、跨平台桌面开发，以及一路上的思考。
+          </Typography>
+          <div className="hero-actions">
+            <AppLink to="/blog" className="button-link button-link--primary">
+              阅读文章
+              <ArrowUpRight className="icon-sm" aria-hidden="true" />
+            </AppLink>
+            <AppLink to="/about" className="hero-about-link">
+              了解我
+              <ArrowRight className="icon-sm" aria-hidden="true" />
+            </AppLink>
+          </div>
+          <div className="hero-code-art" aria-hidden="true">
+            <span>{"{"}</span>
+            <i />
+            <span>{"}"}</span>
+            <small>ideas.into(reality)</small>
+          </div>
+          <span className="hero-corner-label" aria-hidden="true">
+            <Code2 className="icon-xs" /> CRAFTED WITH CURIOSITY
+          </span>
+        </GlassSurface>
+        <GlassSurface className="expertise-card bento-expertise">
+          <div className="card-eyebrow">
+            <span>
+              <Sparkles className="icon-sm" aria-hidden="true" />
+              专注的领域
+            </span>
+            <span>01 — 04</span>
+          </div>
+          <Typography as="h2" variant="card">
+            保持专注，也保持探索。
+          </Typography>
+          <div className="expertise-grid">
+            {site.expertise.map((item) => (
+              <AppLink
+                key={item.id}
+                to={`/blog?category=${item.id}`}
+                className={`expertise-item category-${item.id}`}
+              >
+                <CategoryIcon category={item.id as Category} />
+                <span className="expertise-title">{item.title}</span>
+                <span className="expertise-description">
+                  {item.description}
+                </span>
+                <ArrowUpRight
+                  className="expertise-arrow icon-xs"
+                  aria-hidden="true"
+                />
+              </AppLink>
+            ))}
+          </div>
+        </GlassSurface>
+        <GlassSurface className="featured-card bento-featured">
+          <div className="card-eyebrow">
+            <span>
+              <Layers className="icon-sm" aria-hidden="true" />
+              正在构建
+            </span>
+            <AppLink
+              to={`/projects#${featured.id}`}
+              aria-label={`查看${featured.title}`}
+              className="round-link"
+            >
+              <ArrowUpRight className="icon" aria-hidden="true" />
+            </AppLink>
+          </div>
+          <Typography as="h2" variant="section">
+            {featured.title}
+          </Typography>
+          <Typography variant="small" className="featured-description">
+            让精彩，从小屏走向桌面。一次关于内容与体验的探索。
+          </Typography>
+          <div className="article-tags">
+            {featured.tags.map((tag) => (
+              <Badge
+                key={tag}
+                label={tag}
+                variant="secondary"
+                className="tech-badge"
+              />
+            ))}
+          </div>
+          <DesktopPreview />
+        </GlassSurface>
+        <GlassSurface className="latest-card bento-latest">
+          <div className="card-eyebrow">
+            <span>
+              <FileText className="icon-sm" aria-hidden="true" />
+              最近的文字
+            </span>
+            <span className="mono">/ NOTES</span>
+          </div>
+          <Typography as="h2" variant="section">
+            记录，让思考有迹可循。
+          </Typography>
+          <div className="latest-list">
+            {articles.slice(0, 3).map((article) => (
+              <AppLink
+                to={`/blog/${article.slug}`}
+                key={article.slug}
+                className="latest-article"
+              >
+                <div className="latest-article-info">
+                  <span
+                    className={`category-label category-${article.category}`}
+                  >
+                    <i />
+                    {categoryLabel(article.category)}
+                  </span>
+                  <Typography as="h3" variant="body">
+                    {article.title}
+                  </Typography>
+                </div>
+                <span className="latest-date">
+                  <time dateTime={article.publishedAt}>
+                    {formatDate(article.publishedAt, true)}
+                  </time>
+                  <ArrowUpRight className="icon-sm" aria-hidden="true" />
+                </span>
+              </AppLink>
+            ))}
+          </div>
+          <TextLink to="/blog">全部 {articles.length} 篇文章</TextLink>
+        </GlassSurface>
+        <GlassSurface className="stack-card bento-stack">
+          <div className="card-eyebrow">
+            <span>
+              <Command className="icon-sm" aria-hidden="true" />
+              工具箱
+            </span>
+            <span>LESS, BUT BETTER</span>
+          </div>
+          <Typography as="h2" variant="card">
+            熟悉的工具，新的可能。
+          </Typography>
+          <div className="stack-items">
+            {site.techStack.map((tech) => (
+              <AppLink
+                key={tech.name}
+                to={`/blog?q=${encodeURIComponent(tech.name)}`}
+                className={`stack-item category-${tech.kind}`}
+              >
+                <span className="stack-dot" />
+                <span>{tech.name}</span>
+              </AppLink>
+            ))}
+          </div>
+        </GlassSurface>
+        <GlassSurface className="contact-card bento-contact">
+          <div className="card-eyebrow">
+            <span>
+              <Coffee className="icon-sm" aria-hidden="true" />
+              从一次交流开始
+            </span>
+            <AppLink
+              to="/about#contact"
+              className="round-link"
+              aria-label="前往联系区"
+            >
+              <ArrowUpRight className="icon" aria-hidden="true" />
+            </AppLink>
+          </div>
+          <Typography as="h2" variant="section">
+            好想法，值得聊聊。
+          </Typography>
+          <Typography variant="small">
+            一个技术问题，一次灵感碰撞，或只是打个招呼。
+            <br />
+            期待和同样热爱创造的你相遇。
+          </Typography>
+          <TextLink to="/about#contact">一起做点有意思的事</TextLink>
+        </GlassSurface>
+      </div>
+      <div className="home-closing">
+        <span />
+        <Code2 className="icon-sm" aria-hidden="true" />
+        <span className="closing-text">认真写代码，也认真记录。</span>
+        <span />
+      </div>
+    </div>
+  )
+}
+"use client"
+// Native history keeps filtering local while Next tracks the shared URL state.
+import { useEffect } from "react"
+import { useSearchParams } from "next/navigation"
+import { Button, IconButton, InputField } from "@figma/astraui"
+import { ArrowLeft, ArrowRight, Search, X } from "lucide-react"
+import { articles } from "../content/articles"
+import { ArticleCard } from "../components/ArticleCard"
+import { GlassSurface, Typography } from "../components/ui"
+import { blogParams, categories, getBlogState } from "../lib/articles"
+
+export function BlogPage() {
+  const params = useSearchParams()
+  const state = getBlogState(new URLSearchParams(params.toString()))
+  const { query, category, page, pageCount, results, visible } = state
+  useEffect(() => {
+    const normalized = blogParams(query, category, page)
+    if (normalized.toString() !== params.toString())
+      updateBlogUrl(normalized, true)
+  }, [params, query, category, page])
+  const update = (q: string, c: string, p = 1, replace = false) =>
+    updateBlogUrl(blogParams(q, c, p), replace)
+  const from = `/blog${params.size ? `?${params.toString()}` : ""}`
+
+  return (
+    <div className="blog-page page-enter">
+      <div className="page-heading">
+        <Typography variant="eyebrow">THINKING IN PUBLIC / 公开思考</Typography>
+        <div className="page-title-row">
+          <Typography as="h1" variant="page">
+            写下代码，也写下思考<span className="heading-period">。</span>
+          </Typography>
+          <span className="article-count">
+            {articles.length.toString().padStart(2, "0")}
+            <span>篇手记</span>
+          </span>
+        </div>
+        <Typography>
+          关于 Go、Rust、音视频与桌面开发。把实践沉淀成文字，让经验可以被分享。
+        </Typography>
+      </div>
+      <GlassSurface className="blog-toolbar">
+        <div
+          className="filter-buttons"
+          role="group"
+          aria-label="按文章分类筛选"
+        >
+          {[{ id: "", label: "全部" }, ...categories].map((item) => (
+            <Button
+              key={item.id}
+              variant={category === item.id ? "primary" : "subtle"}
+              size="small"
+              onClick={() => update(query, item.id)}
+              aria-pressed={category === item.id}
+            >
+              {item.label}
+              <span className="filter-count">
+                {item.id
+                  ? articles.filter((article) => article.category === item.id)
+                      .length
+                  : articles.length}
+              </span>
+            </Button>
+          ))}
+        </div>
+        <InputField
+          className="blog-search"
+          aria-label="搜索文章"
+          placeholder="搜索文章、标签…"
+          prefix={<Search className="icon-sm" aria-hidden="true" />}
+          suffix={
+            query ? (
+              <IconButton
+                variant="subtle"
+                size="small"
+                aria-label="清除搜索"
+                onClick={() => update("", category)}
+                icon={<X className="icon-xs" aria-hidden="true" />}
+              />
+            ) : undefined
+          }
+          value={query}
+          onChange={(value) => update(value, category, 1, true)}
+        />
+      </GlassSurface>
+      <div className="blog-result-summary">
+        <span role="status" aria-live="polite">
+          {query.trim()
+            ? `“${query.trim()}” 的搜索结果`
+            : category
+              ? `${categories.find((item) => item.id === category)?.label} 分类`
+              : "全部手记"}
+          <span className="result-dot">·</span>
+          {results.length} 篇文章
+        </span>
+        <span>按发布时间排序</span>
+      </div>
+      {visible.length > 0 ? (
+        <div className="article-grid">
+          {visible.map((article) => (
+            <ArticleCard key={article.slug} article={article} from={from} />
+          ))}
+        </div>
+      ) : (
+        <GlassSurface className="empty-state">
+          <Search aria-hidden="true" />
+          <Typography as="h2" variant="section">
+            没有找到相关文章
+          </Typography>
+          <Typography>
+            换一个关键词，或者清除筛选，重新发现一些有意思的内容。
+          </Typography>
+          <Button variant="neutral" onClick={() => update("", "")}>
+            清除筛选
+          </Button>
+        </GlassSurface>
+      )}
+      {results.length > 0 && (
+        <nav className="pagination" aria-label="文章分页">
+          <Button
+            variant="subtle"
+            size="small"
+            disabled={page === 1}
+            onClick={() => update(query, category, page - 1)}
+            iconStart={<ArrowLeft className="icon-sm" aria-hidden="true" />}
+          >
+            上一页
+          </Button>
+          <div>
+            {Array.from({ length: pageCount }, (_, i) => (
+              <Button
+                key={i}
+                variant={i + 1 === page ? "primary" : "subtle"}
+                size="small"
+                aria-label={`第 ${i + 1} 页`}
+                aria-current={i + 1 === page ? "page" : undefined}
+                onClick={() => update(query, category, i + 1)}
+              >
+                {i + 1}
+              </Button>
+            ))}
+          </div>
+          <Button
+            variant="subtle"
+            size="small"
+            disabled={page === pageCount}
+            onClick={() => update(query, category, page + 1)}
+            iconEnd={<ArrowRight className="icon-sm" aria-hidden="true" />}
+          >
+            下一页
+          </Button>
+        </nav>
+      )}
+      <div className="page-note">
+        <span className="status-dot" />
+        这里还在生长，下一篇思考正在路上。
+      </div>
+    </div>
+  )
+}
+
+function updateBlogUrl(params: URLSearchParams, replace: boolean) {
+  const url = `/blog${params.size ? `?${params.toString()}` : ""}`
+  window.history[replace ? "replaceState" : "pushState"](null, "", url)
+}
+"use client"
+
+import { useEffect, useState } from "react"
+import { Avatar, Badge, Button } from "@figma/astraui"
+import { ArrowLeft, ArrowRight, Clock, Code2, Copy } from "lucide-react"
+import { articles } from "../content/articles"
+import { site } from "../content/site"
+import { ArticleContent } from "../components/ArticleContent"
+import { TableOfContents } from "../components/TableOfContents"
+import { useCopy } from "../components/Feedback"
+import { AppLink, GlassSurface, Typography } from "../components/ui"
+import { categoryLabel, formatDate, readingMinutes } from "../lib/articles"
+import { NotFoundPage } from "./NotFoundPage"
+
+export function ArticlePage({ slug }: { slug: string }) {
+  const copy = useCopy()
+  const [from, setFrom] = useState("/blog")
+  useEffect(() => {
+    const candidate = new URLSearchParams(window.location.search).get("from")
+    setFrom(
+      candidate && /^\/blog\/?(?:\?|$)/.test(candidate) ? candidate : "/blog",
+    )
+  }, [slug])
+  const article = articles.find((item) => item.slug === slug)
+  if (!article) return <NotFoundPage />
+  const index = articles.indexOf(article)
+  const previous = articles[index + 1]
+  const next = articles[index - 1]
+
+  return (
+    <article className="article-page page-enter">
+      <AppLink to={from} className="back-link">
+        <ArrowLeft className="icon-sm" aria-hidden="true" />
+        返回文章
+      </AppLink>
+      <header className="article-heading">
+        <span className={`category-label category-${article.category}`}>
+          <i />
+          {categoryLabel(article.category)}
+        </span>
+        <Typography as="h1" variant="page">
+          {article.title}
+        </Typography>
+        <Typography className="article-lead">{article.excerpt}</Typography>
+        <div className="article-byline">
+          <Avatar
+            type={site.avatarUrl ? "image" : "initial"}
+            src={site.avatarUrl || undefined}
+            initials={site.initials}
+            alt={site.authorName}
+            size="medium"
+          />
+          <span>{site.authorName}</span>
+          <span className="byline-dot">·</span>
+          <time dateTime={article.publishedAt}>
+            {formatDate(article.publishedAt)}
+          </time>
+          <span className="byline-dot">·</span>
+          <span className="byline-reading">
+            <Clock className="icon-xs" aria-hidden="true" />
+            {readingMinutes(article)} 分钟阅读
+          </span>
+        </div>
+        {article.updatedAt && (
+          <Typography variant="meta">
+            更新于 {formatDate(article.updatedAt)}
+          </Typography>
+        )}
+        <div className="article-tags">
+          {article.tags.map((tag) => (
+            <Badge
+              label={tag}
+              key={tag}
+              variant="secondary"
+              className="tech-badge"
+            />
+          ))}
+          <span className="sample-content-label">仓库示例手记</span>
+        </div>
+      </header>
+      <div className="article-layout">
+        <GlassSurface variant="reading" className="reading-surface">
+          <ArticleContent article={article} />
+          <div className="article-end">
+            <span className="article-end-mark">
+              <Code2 aria-hidden="true" />
+            </span>
+            <Typography>感谢阅读，希望这些思考对你有所启发。</Typography>
+            <Button
+              variant="neutral"
+              size="small"
+              iconStart={<Copy className="icon-sm" aria-hidden="true" />}
+              onClick={() => void copy(window.location.href)}
+            >
+              复制文章链接
+            </Button>
+          </div>
+        </GlassSurface>
+        <TableOfContents article={article} />
+      </div>
+      <nav className="article-neighbors" aria-label="相邻文章">
+        {previous ? (
+          <AppLink
+            to={{ pathname: `/blog/${previous.slug}`, query: { from } }}
+            className="neighbor-link"
+          >
+            <span>
+              <ArrowLeft className="icon-xs" />
+              上一篇
+            </span>
+            <Typography variant="card">{previous.title}</Typography>
+          </AppLink>
+        ) : (
+          <span />
+        )}
+        {next && (
+          <AppLink
+            to={{ pathname: `/blog/${next.slug}`, query: { from } }}
+            className="neighbor-link neighbor-next"
+          >
+            <span>
+              下一篇
+              <ArrowRight className="icon-xs" />
+            </span>
+            <Typography variant="card">{next.title}</Typography>
+          </AppLink>
+        )}
+      </nav>
+    </article>
+  )
+}
+"use client"
+
+import { ArrowUpRight, Code2 } from "lucide-react"
+import { projects } from "../content/projects"
+import { ProjectCard } from "../components/ProjectCard"
+import { AppLink, GlassSurface, Typography } from "../components/ui"
+
+export function ProjectsPage() {
+  return (
+    <div className="projects-page page-enter">
+      <div className="page-heading">
+        <Typography variant="eyebrow">
+          IDEAS INTO REALITY / 从想法到作品
+        </Typography>
+        <Typography as="h1" variant="page">
+          不止于想，也动手去做<span className="heading-period">。</span>
+        </Typography>
+        <Typography>
+          一些正在打磨的想法，一些关于工具、体验和技术边界的探索。
+        </Typography>
+      </div>
+      <div className="projects-list">
+        {projects.map((project) => (
+          <ProjectCard project={project} key={project.id} />
+        ))}
+      </div>
+      <GlassSurface className="project-bottom-note">
+        <Code2 aria-hidden="true" />
+        <div>
+          <Typography as="h2" variant="card">
+            构建的过程，也值得被记录。
+          </Typography>
+          <Typography variant="small">
+            这里展示项目方向与原创界面示意，不代表已发布版本；示例项目仅用于说明工程思路。
+          </Typography>
+        </div>
+        <AppLink to="/blog" className="text-link">
+          看看实践笔记
+          <ArrowUpRight className="icon-sm" />
+        </AppLink>
+      </GlassSurface>
+    </div>
+  )
+}
+"use client"
+
+import { Avatar, Badge, Button } from "@figma/astraui"
+import {
+  ArrowDown,
+  ArrowUpRight,
+  Code2,
+  Coffee,
+  Mail,
+  Sparkles,
+} from "lucide-react"
+import { site } from "../content/site"
+import type { Category } from "../content/types"
+import { CategoryIcon } from "../components/CategoryIcon"
+import { useCopy } from "../components/Feedback"
+import {
+  AppLink,
+  ExternalLink,
+  GlassSurface,
+  Typography,
+} from "../components/ui"
+
+export function AboutPage() {
+  const copy = useCopy()
+  const configurationPath = "src/content/site.ts"
+  return (
+    <div className="about-page page-enter">
+      <div className="page-heading">
+        <Typography variant="eyebrow">A LITTLE ABOUT ME / 关于我</Typography>
+        <Typography as="h1" variant="page">
+          热爱技术，也在意体验<span className="heading-period">。</span>
+        </Typography>
+        <Typography>比起一个标签，我更喜欢用正在做的事情介绍自己。</Typography>
+      </div>
+      <div className="about-grid">
+        <GlassSurface className="about-intro">
+          <Avatar
+            type={site.avatarUrl ? "image" : "initial"}
+            src={site.avatarUrl || undefined}
+            initials={site.initials}
+            size="large"
+            alt={site.authorName}
+          />
+          <Typography as="h2" variant="section">
+            你好，我是{site.authorName}。
+          </Typography>
+          <Typography>{site.bio}</Typography>
+          <Typography>
+            我相信，好的代码与好的体验不是两件事。一个边界清楚的函数、一次恰到好处的反馈、一份能帮到别人的笔记，都让构建这件事更有意义。
+          </Typography>
+          <span className="about-signature">
+            Build with care. Share with curiosity.
+          </span>
+          <AppLink to="#contact" className="text-link">
+            很高兴认识你
+            <ArrowDown className="icon-sm" aria-hidden="true" />
+          </AppLink>
+        </GlassSurface>
+        <GlassSurface className="about-principles">
+          <div className="card-eyebrow">
+            <span>
+              <Sparkles className="icon-sm" aria-hidden="true" />
+              我在意的事
+            </span>
+          </div>
+          {[
+            {
+              n: "01",
+              title: "简单，不等于简陋",
+              text: "用尽可能少的复杂度，解决真正的问题。",
+            },
+            {
+              n: "02",
+              title: "让边界保持清晰",
+              text: "好的抽象，让代码和协作都更容易理解。",
+            },
+            {
+              n: "03",
+              title: "先构建，再打磨",
+              text: "从一个小的、完整的体验开始，持续改进。",
+            },
+          ].map((item) => (
+            <div className="principle" key={item.n}>
+              <span>{item.n}</span>
+              <div>
+                <Typography as="h3" variant="body">
+                  {item.title}
+                </Typography>
+                <Typography variant="small">{item.text}</Typography>
+              </div>
+            </div>
+          ))}
+        </GlassSurface>
+        <GlassSurface className="about-interests">
+          <div className="section-heading">
+            <Typography as="h2" variant="section">
+              正在关注的方向
+            </Typography>
+            <Code2 className="icon" aria-hidden="true" />
+          </div>
+          <div className="about-expertise-grid">
+            {site.expertise.map((item) => (
+              <div className="about-expertise" key={item.id}>
+                <CategoryIcon category={item.id as Category} />
+                <Typography as="h3" variant="card">
+                  {item.title}
+                </Typography>
+                <Typography variant="small">{item.detail}</Typography>
+              </div>
+            ))}
+          </div>
+        </GlassSurface>
+        <GlassSurface as="section" id="contact" className="about-contact">
+          <div className="card-eyebrow">
+            <span>
+              <Coffee className="icon-sm" aria-hidden="true" />
+              LET'S CONNECT
+            </span>
+            <span className="status-dot" />
+          </div>
+          <Typography as="h2" variant="section">
+            从一句“你好”开始。
+          </Typography>
+          <Typography>
+            欢迎技术交流、分享你的想法，或者一起探索有意思的事情。
+          </Typography>
+          <div className="contact-methods">
+            {site.email ? (
+              <div>
+                <ExternalLink
+                  href={`mailto:${site.email}`}
+                  className="text-link"
+                >
+                  <Mail className="icon-sm" />
+                  {site.email}
+                  <ArrowUpRight className="icon-sm" />
+                </ExternalLink>
+                <Button
+                  variant="subtle"
+                  size="small"
+                  onClick={() => void copy(site.email)}
+                >
+                  复制邮箱
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <Mail className="icon" aria-hidden="true" />
+                <span>
+                  <strong>电子邮箱</strong>
+                  <span>待配置</span>
+                </span>
+                <Badge label="待配置" variant="secondary" />
+              </div>
+            )}
+            {site.githubUrl ? (
+              <ExternalLink href={site.githubUrl} className="text-link">
+                <Code2 className="icon" />
+                GitHub
+                <ArrowUpRight className="icon-sm" />
+              </ExternalLink>
+            ) : (
+              <div>
+                <Code2 className="icon" aria-hidden="true" />
+                <span>
+                  <strong>GitHub</strong>
+                  <span>待配置</span>
+                </span>
+                <Badge label="待配置" variant="secondary" />
+              </div>
+            )}
+            {site.socialLinks.map((link) => (
+              <ExternalLink
+                href={link.url}
+                key={link.label}
+                className="text-link"
+              >
+                {link.label}
+                <ArrowUpRight className="icon-sm" />
+              </ExternalLink>
+            ))}
+          </div>
+          <Typography variant="meta" className="configuration-note">
+            这是可配置的个人博客原型。真实身份与联系方式统一在
+            <code>{configurationPath}</code> 中替换；未配置前不展示虚构地址。
+          </Typography>
+        </GlassSurface>
+      </div>
+    </div>
+  )
+}
+import { createElement } from "react"
+import { IconButton, Tooltip } from "@figma/astraui"
+import { Copy } from "lucide-react"
+import type { Article, Inline } from "../content/types"
+import { AppLink, ExternalLink, Typography } from "./ui"
+import { useCopy } from "./Feedback"
+
+function InlineContent({ content }: { content: Inline[] }) {
+  return (
+    <>
+      {content.map((item, i) => {
+        if (typeof item === "string") return item
+        if (item.kind === "code")
+          return (
+            <code key={i} className="inline-code">
+              {item.text}
+            </code>
+          )
+        if (item.kind === "strong") return <strong key={i}>{item.text}</strong>
+        return item.href.startsWith("/") ? (
+          <AppLink key={i} to={item.href}>
+            {item.text}
+          </AppLink>
+        ) : (
+          <ExternalLink key={i} href={item.href}>
+            {item.text}
+          </ExternalLink>
+        )
+      })}
+    </>
+  )
+}
+
+export function ArticleContent({ article }: { article: Article }) {
+  const copy = useCopy()
+  return (
+    <div className="article-prose">
+      {article.blocks.map((block, i) => {
+        switch (block.kind) {
+          case "heading":
+            return (
+              <Typography
+                key={block.id}
+                as={block.level === 2 ? "h2" : "h3"}
+                variant={block.level === 2 ? "section" : "card"}
+                id={block.id}
+                className="prose-heading"
+              >
+                {block.text}
+              </Typography>
+            )
+          case "paragraph":
+            return (
+              <Typography key={i}>
+                <InlineContent content={block.content} />
+              </Typography>
+            )
+          case "quote":
+            return (
+              <blockquote key={i}>
+                <InlineContent content={block.content} />
+              </blockquote>
+            )
+          case "list":
+            return createElement(
+              block.ordered ? "ol" : "ul",
+              { key: i },
+              block.items.map((item, j) => (
+                <li key={j}>
+                  <InlineContent content={item} />
+                </li>
+              )),
+            )
+          case "code":
+            return (
+              <div className="code-block" key={i}>
+                <div className="code-block-header">
+                  <span>{block.language}</span>
+                  <Tooltip content="复制代码">
+                    <IconButton
+                      variant="subtle"
+                      size="small"
+                      aria-label="复制代码"
+                      icon={<Copy className="icon-sm" aria-hidden="true" />}
+                      onClick={() => void copy(block.code)}
+                    />
+                  </Tooltip>
+                </div>
+                <pre>
+                  <code>{block.code}</code>
+                </pre>
+              </div>
+            )
+          case "table":
+            return (
+              <div
+                className="table-scroll"
+                key={i}
+                tabIndex={0}
+                role="region"
+                aria-label={`${article.title}，数据表格`}
+              >
+                <table>
+                  <thead>
+                    <tr>
+                      {block.headers.map((header) => (
+                        <th key={header} scope="col">
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.rows.map((row, j) => (
+                      <tr key={j}>
+                        {row.map((cell, k) => (
+                          <td key={k}>{cell}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+        }
+      })}
+    </div>
+  )
+}
+
+--- PACKAGE PUBLIC TYPES ---
+cell
+exports
+features
+field
+hooks.d.ts
+hooks.d.ts.map
+hooks.js
+hooks.js.map
+i18n.d.ts
+i18n.d.ts.map
+i18n.js
+i18n.js.map
+index.d.ts
+index.d.ts.map
+index.js
+index.js.map
+lexical
+lexical-proxy
+populateGraphQL
+presets
+types
+utilities
+validate
+767:    components: {
+819:    components?: {
+835:        afterNav?: CustomComponent[];
+839:        afterNavLinks?: CustomComponent[];
+843:        beforeDashboard?: CustomComponent[];
+851:        beforeNav?: CustomComponent[];
+875:        Nav?: CustomComponent;
+879:        providers?: PayloadComponent<{
+912:            dashboard?: AdminViewConfig;
+928:    dashboard?: DashboardConfig;
+1529:    dashboard: Required<DashboardConfig>;
+
+--- DS DOCS ---
+# Button
+
+## When to use
+
+Use Button for all interactive actions — form submissions, navigation triggers, and commands. Always use the `Button` component from `@figma/astraui`, never a raw `<button>` element.
+
+## Variants
+
+| Variant | Frequency | Use for |
+|---|---|---|
+| `primary` | ~30% | Main CTA — one per visible section |
+| `neutral` | ~50% | **Default — most actions**, supporting actions alongside primary |
+| `subtle` | ~20% | Low-emphasis actions, text-like buttons |
+
+IMPORTANT: Valid variants are `"primary"`, `"neutral"`, `"subtle"` — nothing else. Do NOT use `"secondary"`, `"ghost"`, `"destructive"`, or `"link"`.
+
+## Variant decision tree
+
+```
+┌─ "What button variant should I use?"
+│
+├─ Main call-to-action (one per section)?
+│  └─ variant="primary"
+│
+├─ Supporting action alongside a primary?
+│  └─ variant="neutral" ⭐ Default
+│
+└─ Subtle or low-emphasis action?
+   └─ variant="subtle"
+```
+
+## Sizing
+
+| Size | Height | Usage |
+|---|---|---|
+| `medium` | Default | **Most cases** — standard actions |
+| `small` | Compact | Dense UI, inline actions, secondary controls |
+
+## Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `variant` | `'primary' \| 'neutral' \| 'subtle'` | `'primary'` |
+| `size` | `'medium' \| 'small'` | `'medium'` |
+| `iconStart` | `ReactNode` | — |
+| `iconEnd` | `ReactNode` | — |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+
+Also accepts all native `<button>` HTML attributes.
+
+## Usage notes
+
+- Icons use `iconStart` and `iconEnd` props — NOT `leftIcon`, `rightIcon`, or `icon`
+- Use `size={16}` on icons passed to `iconStart`/`iconEnd`
+- Buttons are pill-shaped (`rounded-corner-full`)
+
+## Examples
+
+```tsx
+import { Button } from '@figma/astraui'
+import { Plus, ArrowRight, Trash2 } from 'lucide-react'
+
+{/* Primary CTA */}
+<Button variant="primary">Save Changes</Button>
+
+{/* Neutral supporting action */}
+<Button variant="neutral">Cancel</Button>
+
+{/* With icons */}
+<Button variant="primary" iconStart={<Plus size={16} />}>Add Item</Button>
+<Button variant="subtle" iconEnd={<ArrowRight size={16} />}>Next</Button>
+
+{/* Small size */}
+<Button variant="neutral" size="small">Change Photo</Button>
+```
+
+---
+
+# IconButton
+
+## When to use
+
+Use IconButton for icon-only actions where a text label isn't needed — toolbars, compact controls, close buttons. Shares the same variant and size system as Button but renders as a circle with no label.
+
+## Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `icon` | `ReactNode` | required |
+| `variant` | `'primary' \| 'neutral' \| 'subtle'` | `'primary'` |
+| `size` | `'medium' \| 'small'` | `'medium'` |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+
+Also accepts all native `<button>` HTML attributes.
+
+## Sizing
+
+| Size | Dimensions |
+|---|---|
+| `medium` | 40×40px |
+| `small` | 32×32px |
+
+## Usage notes
+
+- Always circular (`rounded-full`) — not pill-shaped like Button
+- Use `subtle` variant for most icon-only actions to keep the UI minimal
+- Pair with `Tooltip` so users can discover the action on hover
+- Prefer `Button` with a label when there's room — icon-only buttons are harder to understand
+
+## Example
+
+```tsx
+import { IconButton } from '@figma/astraui'
+import { Plus, X, Settings } from 'lucide-react'
+
+{/* Primary action */}
+<IconButton icon={<Plus size={16} />} variant="primary" />
+
+{/* Subtle close button */}
+<IconButton icon={<X size={16} />} variant="subtle" size="small" />
+
+{/* Neutral with outline */}
+<IconButton icon={<Settings size={16} />} variant="neutral" />
+```
+
+---
+
+# ButtonGroup
+
+## When to use
+
+Use ButtonGroup to layout related actions together with consistent alignment.
+
+## Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `children` | `ReactNode` | required |
+| `align` | `'justify' \| 'start' \| 'end' \| 'center' \| 'stack'` | `'justify'` |
+| `className` | `string` | — |
+
+## Alignment options
+
+| Align | Behavior |
+|---|---|
+| `justify` | Full-width, space-between with equal flex |
+| `start` | Horizontal, aligned left |
+| `end` | Horizontal, aligned right |
+| `center` | Horizontal, centered |
+| `stack` | Vertical with full-width buttons |
+
+## Example
+
+```tsx
+import { Button, ButtonGroup } from '@figma/astraui'
+
+{/* Form footer — cancel + save */}
+<ButtonGroup align="end">
+  <Button variant="neutral">Cancel</Button>
+  <Button variant="primary">Save</Button>
+</ButtonGroup>
+
+{/* Full-width justified */}
+<ButtonGroup align="justify">
+  <Button variant="neutral">Back</Button>
+  <Button variant="primary">Continue</Button>
+</ButtonGroup>
+```
+
+---
+
+# FavoriteButton
+
+## When to use
+
+Use FavoriteButton for toggle favorite/star actions on content items. Typically overlays video thumbnails or appears alongside metadata.
+
+## Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `defaultFavorited` | `boolean` | `false` |
+| `onChange` | `(favorited: boolean) => void` | — |
+| `className` | `string` | — |
+
+Also accepts all native `<button>` HTML attributes.
+
+## Usage notes
+
+- 24px circular toggle button
+- Uses `surface-bg` background that adapts to dark mode
+- Stroked `Star` icon when inactive, filled `brand-primary` star when favorited
+- Designed to overlay video thumbnails — works on both light and dark backgrounds
+
+## Example
+
+```tsx
+import { FavoriteButton } from '@figma/astraui'
+
+<FavoriteButton defaultFavorited={false} onChange={(fav) => console.log(fav)} />
+```
+
+---
+
+## Rules
+
+- Only one `primary` button per visible section
+- All buttons in a group must use the same size variant — do not mix `medium` and `small`
+- Do not use variant names that don't exist — only `"primary"`, `"neutral"`, `"subtle"`
+- Primary action button goes on the right in button groups (Cancel left, Save right)
+- Use `iconStart`/`iconEnd` for icons — not children or other prop names
+# Forms & Inputs
+
+## Components
+
+| Component | Purpose | Use when |
+|---|---|---|
+| `InputField` | Single-line text entry | Freeform short text |
+| `TextareaField` | Multi-line text entry | Freeform long text |
+| `SelectField` | Dropdown selection | Choosing from predefined options |
+| `SearchComponent` | Search with animated placeholder | Search functionality |
+| `Checkbox` | Boolean selection | Boolean on/off in a form |
+| `RadioGroup` | Mutually exclusive choices | 2+ mutually exclusive options |
+| `SwitchField` | On/off toggle | Boolean setting with label |
+
+Always use these components — never raw HTML `<input>`, `<textarea>`, `<select>`, or `<input type="checkbox">`.
+
+## Input component selection
+
+```
+┌─ "How should the user provide input?"
+│
+├─ Choose from mutually exclusive options?
+│  └─ RadioGroup
+│
+├─ Choose from predefined options (dropdown)?
+│  └─ SelectField
+│
+├─ Boolean on/off (setting with label)?
+│  └─ SwitchField
+│
+├─ Boolean on/off (form field)?
+│  └─ Checkbox
+│
+├─ Freeform short text?
+│  └─ InputField
+│
+├─ Freeform long text?
+│  └─ TextareaField
+│
+└─ Search with animated placeholder?
+   └─ SearchComponent
+```
+
+---
+
+## InputField
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `value` | `string` | — |
+| `placeholder` | `string` | `'I am a placeholder...'` |
+| `label` | `string` | — |
+| `description` | `string` | — |
+| `prefix` | `ReactNode` | — |
+| `suffix` | `ReactNode` | — |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+| `onChange` | `(value: string) => void` | — |
+
+Also accepts all native `<input>` HTML attributes.
+
+### Usage notes
+
+- `onChange` uses a simplified signature: `(value: string) => void` — not the native event
+- `prefix` and `suffix` render inside the input container — use for icons, units, or short labels
+- Use `size={16}` on icons passed to `prefix`
+
+### Example
+
+```tsx
+import { InputField } from '@figma/astraui'
+import { Search } from 'lucide-react'
+
+<InputField
+  label="Email Address"
+  description="Your primary contact email"
+  value="sarah@example.com"
+  onChange={(val) => setEmail(val)}
+/>
+
+<InputField
+  prefix={<Search size={16} />}
+  suffix="USD"
+  label="Amount"
+  value="100"
+  onChange={(val) => setAmount(val)}
+/>
+```
+
+---
+
+## TextareaField
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `value` | `string` | — |
+| `placeholder` | `string` | `'Your text goes here...'` |
+| `label` | `string` | — |
+| `description` | `string` | — |
+| `rows` | `number` | `3` |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+| `onChange` | `(value: string) => void` | — |
+
+Also accepts all native `<textarea>` HTML attributes.
+
+### Usage notes
+
+- `onChange` uses simplified signature: `(value: string) => void`
+- Supports vertical resize by default (disabled when `disabled`)
+
+### Example
+
+```tsx
+<TextareaField
+  label="Bio"
+  description="Tell us about yourself"
+  placeholder="Your text goes here..."
+  rows={4}
+  onChange={(val) => setBio(val)}
+/>
+```
+
+---
+
+## SelectField
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `options` | `{ value: string, label: string }[]` | required |
+| `value` | `string` | `''` |
+| `onChange` | `(value: string) => void` | required |
+| `placeholder` | `string` | `'Select an option'` |
+| `label` | `string` | — |
+| `description` | `string` | — |
+| `state` | `'empty' \| 'default'` | `'default'` |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+
+### Usage notes
+
+- Supports keyboard navigation (arrows, Enter, Escape)
+- Options are passed as an array of `{ value, label }` objects — not as children
+
+### Example
+
+```tsx
+<SelectField
+  label="Time Zone"
+  options={[
+    { value: 'utc', label: 'UTC' },
+    { value: 'est', label: 'Eastern Time' },
+    { value: 'pst', label: 'Pacific Time' },
+  ]}
+  value={timezone}
+  onChange={(val) => setTimezone(val)}
+/>
+```
+
+---
+
+## SearchComponent
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `value` | `string` | `''` |
+| `placeholder` | `string` | `'Search'` |
+| `onChange` | `(value: string) => void` | — |
+| `onSearch` | `(value: string) => void` | — |
+| `disabled` | `boolean` | `false` |
+
+### Usage notes
+
+- Features animated placeholder typing through: 'anything', 'clips', 'audio'
+- Use in page headers and toolbars for search functionality
+
+### Example
+
+```tsx
+<SearchComponent
+  placeholder="Search"
+  onChange={(val) => setQuery(val)}
+  onSearch={(val) => handleSearch(val)}
+/>
+```
+
+---
+
+## Checkbox
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `label` | `string` | — |
+| `description` | `string` | — |
+| `defaultChecked` | `boolean` | `false` |
+| `onChange` | `(checked: boolean) => void` | — |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+
+### Usage notes
+
+- 20px checkbox with `brand-primary` fill and animated checkmark when checked
+- Uses `role="checkbox"` and `aria-checked` for accessibility
+
+### Example
+
+```tsx
+<Checkbox
+  label="Accept terms"
+  description="You agree to our terms of service"
+  defaultChecked={false}
+  onChange={(checked) => setAccepted(checked)}
+/>
+```
+
+---
+
+## RadioGroup
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `options` | `{ value: string, label: string, description?: string }[]` | required |
+| `value` | `string` | — |
+| `defaultValue` | `string` | `''` |
+| `onChange` | `(value: string) => void` | — |
+| `name` | `string` | — |
+| `disabled` | `boolean` | `false` |
+| `className` | `string` | — |
+
+### Usage notes
+
+- Supports controlled (`value`) and uncontrolled (`defaultValue`) modes
+- Each option can have an optional `description` displayed below the label
+- 20px radio circles with `brand-primary` fill when selected
+
+### Example
+
+```tsx
+<RadioGroup
+  options={[
+    { value: '720', label: '720p', description: 'Standard definition' },
+    { value: '1080', label: '1080p', description: 'Full HD' },
+    { value: '4k', label: '4K', description: 'Ultra HD' },
+  ]}
+  defaultValue="1080"
+  onChange={(val) => setResolution(val)}
+/>
+```
+
+---
+
+## SwitchField
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `label` | `string` | `'Label'` |
+| `description` | `string` | `'Description'` |
+| `hasDescription` | `boolean` | `true` |
+| `showLabel` | `boolean` | `true` |
+| `defaultSelected` | `boolean` | `true` |
+| `onChange` | `(selected: boolean) => void` | — |
+| `disabled` | `boolean` | `false` |
+
+### Example
+
+```tsx
+<SwitchField
+  label="Push Notifications"
+  description="Receive notifications for new messages"
+  defaultSelected={true}
+  onChange={(selected) => setNotifications(selected)}
+/>
+```
+
+---
+
+## Form layout rules
+
+- Use `flex flex-col gap-lg` (12px) between fields in a vertical stack
+- Use `flex gap-xl` (16px) with `flex-1` children for side-by-side fields
+- All form fields should be inside a `bg-surface-bg rounded-corner-lg p-xl` card
+- Labels are positioned consistently — always above the input (handled by components)
+- Do not mix input sizing within the same form
+- All `onChange` callbacks use simplified signatures: `(value) => void`, not native events
+# Navigation
+
+Astra has three levels of navigation. Use them in order — never skip a level.
+
+| Level | Component | Purpose |
+|---|---|---|
+| **Primary** | `SidebarNavigation` + `SidebarButton` | App-level navigation. Always present on every page. |
+| **Secondary** | `SecondaryNav` + `SecondaryNavItem` | Section-level navigation (e.g. Settings sub-sections). |
+| **Tertiary** | `Tabs` | Content-level switching within a section. See [tabs.md](tabs.md). |
+
+## AstraLogo
+
+The `AstraLogo` component renders the Astra brand mark as an inline SVG. It uses `var(--brand-primary)` for the background fill so it adapts to light/dark mode automatically.
+
+| Prop | Type | Default |
+|---|---|---|
+| `size` | `number` | `32` |
+| `className` | `string` | — |
+
+### Usage notes
+
+- Built into `SidebarNavigation` at the top — you do not need to add it manually when using the sidebar
+- Use standalone only for branding outside of navigation (e.g. loading screens, empty states)
+- The `size` prop controls both width and height in pixels
+
+### Example
+
+```tsx
+import { AstraLogo } from '@figma/astraui'
+
+<AstraLogo size={32} />
+```
+
+---
+
+## Navigation hierarchy decision tree
+
+```
+┌─ "What navigation component should I use?"
+│
+├─ App-level navigation (always present)?
+│  └─ SidebarNavigation + SidebarButton (PRIMARY)
+│
+├─ Page sub-sections (settings, detail views)?
+│  └─ SecondaryNav + SecondaryNavItem (SECONDARY)
+│
+└─ Content switching within a section?
+   └─ Tabs (TERTIARY) — see tabs.md
+```
+
+## Layout patterns
+
+**Simple page (no secondary nav):**
+```
+[ SidebarNavigation 60px ] [ Main content (flex-1) ]
+  surface-bg + border-r       brand-tertiary background
+                               └── surface-bg cards float on top
+```
+
+**Page with secondary nav:**
+```
+[ SidebarNavigation 60px ] [ SecondaryNav ~252px ] [ Main content (flex-1) ]
+  surface-bg + border-r       surface-secondary-bg    brand-tertiary background
+                               + border-r              └── surface-bg cards float on top
+```
+
+---
+
+## SidebarNavigation
+
+### When to use
+
+IMPORTANT: Every desktop page MUST include SidebarNavigation. No exceptions — settings pages, empty states, dashboards, editors, error pages all include the sidebar.
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `children` | `ReactNode` | — |
+| `footer` | `ReactNode` | — |
+| `className` | `string` | — |
+
+### Usage notes
+
+- 60px wide, full height
+- `AstraLogo` is built in at the top
+- `bg-surface-bg` background with `border-r border-border-primary`
+- Pass `SidebarButton` components as **children** — there is NO `navItems` prop
+- Footer items go in the **`footer`** prop — there is NO `bottomNavItems` prop
+
+### Standard configuration
+
+Always use this exact configuration:
+
+- **Primary nav (top):** Home, Film, Book, Folder — all four, in this order
+- **Footer (bottom):** Settings icon + user Avatar — always both present
+- Set `active` on the item matching the current page
+
+### Example
+
+```tsx
+import { SidebarNavigation, SidebarButton, Avatar } from '@figma/astraui'
+import { Home, Film, Book, Folder, Settings } from 'lucide-react'
+
+<SidebarNavigation
+  footer={
+    <>
+      <SidebarButton icon={<Settings className="size-full" strokeWidth={1.5} />} />
+      <Avatar type="image" src="/user.jpg" size="medium" shape="circle" />
+    </>
+  }
+>
+  <SidebarButton icon={<Home className="size-full" strokeWidth={1.5} />} active />
+  <SidebarButton icon={<Film className="size-full" strokeWidth={1.5} />} />
+  <SidebarButton icon={<Book className="size-full" strokeWidth={1.5} />} />
+  <SidebarButton icon={<Folder className="size-full" strokeWidth={1.5} />} />
+</SidebarNavigation>
+```
+
+---
+
+## SidebarButton
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `icon` | `ReactNode` | required |
+| `active` | `boolean` | `false` |
+| `className` | `string` | — |
+
+Also accepts all native `<button>` HTML attributes.
+
+### Usage notes
+
+- Default state: 50% opacity icon, no background
+- Active state: `brand-tertiary` background, 85% opacity icon
+- Always use `className="size-full"` and `strokeWidth={1.5}` on the icon
+
+---
+
+## SecondaryNav
+
+### When to use
+
+Use SecondaryNav for pages with sub-sections — settings, account pages, detail views. It sits between SidebarNavigation and the main content area.
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `title` | `string` | required |
+| `children` | `ReactNode` | required |
+| `className` | `string` | — |
+
+### Usage notes
+
+- ~252px default width, full height
+- `bg-surface-secondary-bg` background with `border-r border-border-primary`
+- Pass `SecondaryNavItem` components as children
+
+### Example
+
+```tsx
+import { SecondaryNav, SecondaryNavItem } from '@figma/astraui'
+import { User, CreditCard, Bell, Video } from 'lucide-react'
+
+<SecondaryNav title="Settings">
+  <SecondaryNavItem icon={<User className="size-full" strokeWidth={1.5} />} label="Profile" active />
+  <SecondaryNavItem icon={<CreditCard className="size-full" strokeWidth={1.5} />} label="Billing" />
+  <SecondaryNavItem icon={<Bell className="size-full" strokeWidth={1.5} />} label="Notifications" />
+  <SecondaryNavItem icon={<Video className="size-full" strokeWidth={1.5} />} label="Media" />
+</SecondaryNav>
+```
+
+---
+
+## SecondaryNavItem
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `icon` | `ReactNode` | required |
+| `label` | `string` | required |
+| `active` | `boolean` | `false` |
+| `className` | `string` | — |
+
+Also accepts all native `<button>` HTML attributes.
+
+### Usage notes
+
+- Active state: `brand-tertiary` background with `brand-primary` text
+- Inactive state: `text-secondary` with hover to `bg-hover`
+- Always use `className="size-full"` and `strokeWidth={1.5}` on the icon
+
+---
+
+## Full page example
+
+```tsx
+<div className="flex h-screen">
+  <SidebarNavigation
+    footer={
+      <>
+        <SidebarButton icon={<Settings className="size-full" strokeWidth={1.5} />} />
+        <Avatar type="image" src="/user.jpg" size="medium" shape="circle" />
+      </>
+    }
+  >
+    <SidebarButton icon={<Home className="size-full" strokeWidth={1.5} />} />
+    <SidebarButton icon={<Film className="size-full" strokeWidth={1.5} />} />
+    <SidebarButton icon={<Book className="size-full" strokeWidth={1.5} />} />
+    <SidebarButton icon={<Folder className="size-full" strokeWidth={1.5} />} />
+  </SidebarNavigation>
+
+  <SecondaryNav title="Settings">
+    <SecondaryNavItem icon={<User className="size-full" strokeWidth={1.5} />} label="Profile" active />
+    <SecondaryNavItem icon={<CreditCard className="size-full" strokeWidth={1.5} />} label="Billing" />
+  </SecondaryNav>
+
+  <main className="flex-1 bg-brand-tertiary p-2xl overflow-y-auto">
+    <h1 className="text-title text-text-primary">Profile</h1>
+    <p className="text-label-sm text-text-secondary mt-xs mb-xl">Manage your personal information</p>
+    <div className="flex flex-col gap-xl max-w-3xl">
+      <div className="bg-surface-bg rounded-corner-lg p-xl">
+        {/* Form content */}
+      </div>
+    </div>
+  </main>
+</div>
+```
+
+## Rules
+
+- Every desktop page MUST include SidebarNavigation — no exceptions
+- SidebarNavigation and SecondaryNav are separate, side-by-side panels — never combine them
+- Always use the standard four nav items (Home, Film, Book, Folder) and two footer items (Settings, Avatar)
+- Never skip navigation levels — use SecondaryNav for sub-sections, not Tabs
+# Tabs & SegmentedControl
+
+## Tabs
+
+### When to use
+
+Use Tabs for switching between content panels within a single section. Tabs are **tertiary navigation only** — used inside the main content area to switch views or filter content.
+
+```
+┌─ "Should I use Tabs?"
+│
+├─ Switching views within a single section?
+│  └─ Yes — Tabs (tertiary navigation)
+│
+├─ App-level page navigation?
+│  └─ No — use SidebarNavigation (primary)
+│
+├─ Page sub-sections (settings, detail views)?
+│  └─ No — use SecondaryNav (secondary)
+│
+└─ Inline icon switcher (compact)?
+   └─ No — use SegmentedControl
+```
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `tabs` | `{ id: string, label: string, content: ReactNode }[]` | required |
+| `defaultTab` | `string` | first tab |
+| `onChange` | `(tabId: string) => void` | — |
+| `className` | `string` | — |
+
+### Usage notes
+
+- Active tab uses `text-brand-primary` with a `brand-primary` underline indicator
+- Inactive tabs use `text-text-secondary` with hover to `text-text-primary`
+- Uses `role="tablist"`, `role="tab"` with `aria-selected`, and `role="tabpanel"` for accessibility
+- Tabs are passed as an array of `{ id, label, content }` objects — the component handles rendering
+
+### Example
+
+```tsx
+import { Tabs } from '@figma/astraui'
+
+<Tabs
+  tabs={[
+    { id: 'details', label: 'Details', content: <DetailsPanel /> },
+    { id: 'export', label: 'Export', content: <ExportPanel /> },
+    { id: 'activity', label: 'Activity', content: <ActivityPanel /> },
+  ]}
+  defaultTab="details"
+  onChange={(tabId) => setActiveTab(tabId)}
+/>
+```
+
+### Rules
+
+IMPORTANT: Tabs are TERTIARY navigation only. Do NOT use Tabs for primary navigation (use SidebarNavigation) or secondary navigation (use SecondaryNav). If a page has sub-sections like Settings, those are SecondaryNavItems in a SecondaryNav, not Tabs.
+
+- Do not add icons inside Tabs — use text labels only
+- Tabs should be inside the main content area, not as standalone navigation
+
+---
+
+## SegmentedControl
+
+### When to use
+
+Use SegmentedControl for compact inline switching between modes or views using icon-only segments. Typically used in toolbars or compact UI areas.
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `segments` | `{ id: string, icon: ReactNode }[]` | required |
+| `selectedSegment` | `string` | required |
+| `onChange` | `(segmentId: string) => void` | required |
+
+### Usage notes
+
+- Icon-only segments — no text labels
+- Controlled component — parent manages `selectedSegment` state
+- Use `size={24}` on icons passed in the segments array
+
+### Example
+
+```tsx
+import { SegmentedControl } from '@figma/astraui'
+import { Home, Film, Music, Image } from 'lucide-react'
+
+<SegmentedControl
+  segments={[
+    { id: 'home', icon: <Home size={24} /> },
+    { id: 'video', icon: <Film size={24} /> },
+    { id: 'audio', icon: <Music size={24} /> },
+    { id: 'image', icon: <Image size={24} /> },
+  ]}
+  selectedSegment={activeSegment}
+  onChange={(id) => setActiveSegment(id)}
+/>
+```
+
+### Rules
+
+- Use consistent icon sizes across all segments (all 24px)
+- SegmentedControl is for mode switching, not page navigation
+- Always provide a `selectedSegment` — it's a controlled component
+# Feedback & Status
+
+## Components
+
+| Component | Purpose | Use when |
+|---|---|---|
+| `Toast` | Brief notification with progress | Confirmations, upload progress, auto-dismiss alerts |
+| `Badge` | Status label or counter | Tagging content, showing status, counts |
+| `Tooltip` | Contextual hint on hover/focus | Labeling icon-only buttons, abbreviation explanations |
+
+## Feedback component selection
+
+```
+┌─ "How should I show information to the user?"
+│
+├─ Brief notification with progress?
+│  └─ Toast — "Uploading...", "Changes saved"
+│
+├─ Status label or counter?
+│  └─ Badge — "New", "Active", "Warning"
+│
+├─ Contextual hint on hover?
+│  └─ Tooltip — icon button labels, extra info
+│
+└─ Requires user decision or focused task?
+   └─ Modal — see modal.md
+```
+
+---
+
+## Toast
+
+### When to use
+
+Use Toast for brief notifications that confirm an action or show progress. Toasts are non-blocking and can auto-dismiss.
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `message` | `string` | required |
+| `progress` | `number` | `0` |
+| `variant` | `'default' \| 'success' \| 'error' \| 'warning'` | `'default'` |
+| `showCancel` | `boolean` | `true` |
+| `onCancel` | `() => void` | — |
+| `onDismiss` | `() => void` | — |
+
+### Usage notes
+
+- Auto-loops a progress animation when `progress <= 0`
+- Use `progress` (0-100) for determinate progress (file uploads, exports)
+- `showCancel` displays a cancel button for interruptible operations
+
+### Example
+
+```tsx
+import { Toast } from '@figma/astraui'
+
+{/* Upload progress */}
+<Toast message="Uploading video..." progress={45} variant="default" showCancel onCancel={() => cancelUpload()} />
+
+{/* Success confirmation */}
+<Toast message="Changes saved" variant="success" progress={100} />
+
+{/* Error notification */}
+<Toast message="Upload failed" variant="error" showCancel={false} />
+```
+
+---
+
+## Badge
+
+### When to use
+
+Use Badge for status labels, category tags, and counters. Badge uses a `label` prop — not children.
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `label` | `string` | `'Label'` |
+| `variant` | `'default' \| 'success' \| 'warning' \| 'danger' \| 'brand' \| 'secondary'` | `'default'` |
+| `removable` | `boolean` | `false` |
+| `onRemove` | `() => void` | — |
+
+### Variant selection
+
+| Variant | Use for |
+|---|---|
+| `default` | Neutral status, general labels |
+| `success` | Active, complete, approved |
+| `warning` | Attention needed, pending |
+| `danger` | Error, failed, blocked |
+| `brand` | Featured, promoted, brand-specific |
+| `secondary` | Low-emphasis, muted labels |
+
+### Usage notes
+
+IMPORTANT: Badge uses the `label` prop for text — NOT children. `<Badge label="Active" />` not `<Badge>Active</Badge>`.
+
+- `removable` adds an X button — use for filter tags that can be dismissed
+- 8px border radius (`rounded-corner-md`)
+
+### Example
+
+```tsx
+import { Badge } from '@figma/astraui'
+
+<Badge label="Active" variant="success" />
+<Badge label="Draft" variant="default" />
+<Badge label="Urgent" variant="danger" />
+<Badge label="AI Enhanced" variant="brand" />
+
+{/* Removable filter tag */}
+<Badge label="4K" variant="secondary" removable onRemove={() => removeFilter('4k')} />
+```
+
+---
+
+## Tooltip
+
+### When to use
+
+Use Tooltip for contextual hints shown on hover or focus. Use for labeling icon-only buttons, explaining abbreviations, or providing supplementary info.
+
+### Props
+
+| Prop | Type | Default |
+|---|---|---|
+| `content` | `string` | required |
+| `position` | `'top' \| 'bottom' \| 'left' \| 'right'` | `'top'` |
+| `delay` | `number` (ms) | `200` |
+| `children` | `ReactNode` | required |
+| `className` | `string` | — |
+
+### Usage notes
+
+- `surface-dark` background with white text (`on-brand`) and a 4px CSS border-arrow
+- Wraps the trigger element inline
+- Configurable show delay (default 200ms)
+- Use for icon-only buttons rather than adding persistent text labels — supports progressive disclosure
+
+### Example
+
+```tsx
+import { Tooltip, Button } from '@figma/astraui'
+import { Settings, Download } from 'lucide-react'
+
+{/* Label an icon-only action */}
+<Tooltip content="Settings" position="bottom">
+  <Button variant="subtle" iconStart={<Settings size={16} />} />
+</Tooltip>
+
+{/* Explain an abbreviation */}
+<Tooltip content="Ultra High Definition" position="top">
+  <span className="text-text-secondary cursor-help">4K UHD</span>
+</Tooltip>
+```
+
+---
+
+## Rules
+
+- Use Toast for brief, non-blocking notifications — not for persistent messages
+- Badge uses `label` prop — never children
+- Tooltip is for supplementary info — never for critical content that must be read
+- Prefer Tooltip over persistent text labels for icon-only buttons (progressive disclosure)
+- Do not use Tooltip on touch devices — it requires hover

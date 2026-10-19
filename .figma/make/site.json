@@ -1,0 +1,8 @@
+{
+  "title": "开发者的手记",
+  "language": "zh-CN",
+  "description": "关于 Go、Rust、音视频与跨平台桌面应用的开发手记。把实践沉淀成文字，让想法成为好用的软件。",
+  "icons": {
+    "icon": "/favicon.svg"
+  }
+}

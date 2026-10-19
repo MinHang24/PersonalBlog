@@ -1,0 +1,77 @@
+html[data-minhang-admin] {
+  --font-body: var(--font-sans);
+  --font-serif: var(--font-sans);
+  --theme-bg: var(--blog-canvas);
+  --theme-text: var(--text-primary);
+  --theme-input-bg: var(--surface-bg);
+  --theme-elevation-0: var(--surface-bg);
+  --theme-elevation-50: var(--blog-reading-bg);
+  --theme-elevation-100: var(--surface-hover);
+  --theme-elevation-150: var(--bg-faint);
+  --theme-elevation-200: var(--border-secondary);
+  --theme-elevation-300: var(--border-primary);
+  --theme-elevation-400: var(--text-tertiary);
+  --theme-elevation-500: var(--text-secondary);
+  --theme-elevation-600: var(--text-secondary);
+  --theme-elevation-700: var(--text-primary);
+  --theme-elevation-800: var(--text-primary);
+  --theme-elevation-900: var(--text-primary);
+  --theme-elevation-1000: var(--text-primary);
+  --theme-success-500: var(--success);
+  --theme-error-500: var(--danger);
+  --style-radius-s: var(--corner-md);
+  --style-radius-m: var(--corner-lg);
+  --style-radius-l: var(--blog-radius-inner);
+  --style-radius-xl: var(--blog-radius-card);
+}
+
+html[data-minhang-admin] body,
+html[data-minhang-admin] :is(button, input, textarea, select, .rich-text-lexical, .field-label) {
+  font-family: var(--font-sans);
+}
+
+html[data-minhang-admin] :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-display);
+  font-weight: var(--blog-weight-strong);
+}
+
+html[data-minhang-admin] :is(code, pre, .code-editor) {
+  font-family: var(--font-mono);
+}
+
+html[data-minhang-admin] .monaco-editor :is(.view-lines, .inputarea) {
+  font-family: var(--font-mono) !important;
+  font-weight: var(--blog-weight-regular) !important;
+}
+
+html[data-minhang-admin] .template-default {
+  background: var(--blog-canvas);
+}
+
+html[data-minhang-admin] .nav {
+  background: var(--blog-glass-bg);
+  backdrop-filter: blur(var(--blog-blur)) saturate(var(--blog-saturation));
+}
+
+html[data-minhang-admin] .dashboard__wrap {
+  max-width: var(--blog-content-max);
+  margin-inline: auto;
+}
+
+html[data-minhang-admin] .cms-dashboard {
+  padding-block: var(--space-2xl);
+}
+
+html[data-minhang-admin] .cms-dashboard .type-page {
+  font-size: var(--blog-font-page);
+}
+
+html[data-minhang-admin] :is(.collection-edit, .global-edit) .document-fields__main {
+  background: var(--blog-reading-bg);
+  border-radius: var(--blog-radius-inner);
+}
+
+html[data-minhang-admin] .cms-dashboard th,
+html[data-minhang-admin] .cms-dashboard td {
+  border-bottom: var(--blog-border-width) solid var(--blog-line);
+}
