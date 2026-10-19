@@ -54,10 +54,6 @@ export function cmsErrorResponse(error: unknown) {
         headers: { "Cache-Control": "private, no-store" },
       },
     )
-  console.error(
-    "CMS request failed",
-    error instanceof Error ? error.name : "UnknownError",
-  )
   return Response.json(
     {
       success: false,

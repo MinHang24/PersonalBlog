@@ -32,6 +32,7 @@ export async function getPublishedPostSummaries() {
     title: a.title,
     excerpt: a.excerpt || a.summary || "",
     publishedAt: a.publishedAt || a.date || "2026-01-01",
+    readingTime: a.readingMinutes || 5,
     readingMinutes: a.readingMinutes || 5,
     tags: a.tags || [],
     category: a.category || "",
