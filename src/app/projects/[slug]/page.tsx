@@ -8,7 +8,7 @@ import { ProjectPage } from "@/views/ProjectPage"
 
 type Props = { params: Promise<{ slug: string }> }
 export const dynamic = "force-static"
-export const dynamicParams = true
+export const dynamicParams = false
 
 export async function generateStaticParams() {
   return (await getPublishedProjects()).map(({ slug }) => ({ slug }))

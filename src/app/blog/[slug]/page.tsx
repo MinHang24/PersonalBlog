@@ -9,7 +9,7 @@ import { ArticlePage } from "@/views/ArticlePage"
 
 type Props = { params: Promise<{ slug: string }> }
 
-export const dynamicParams = true
+export const dynamicParams = false
 export const dynamic = "force-static"
 
 export async function generateStaticParams() {

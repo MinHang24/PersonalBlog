@@ -5,7 +5,7 @@ import {
   getPublishedPostSummaries,
 } from "@/lib/content/queries"
 import { NotFoundPage } from "@/views/NotFoundPage"
-import "./(frontend)/styles.css"
+import "./styles.css"
 
 export const metadata: Metadata = {
   title: "页面未找到 · 敏航的手记",

@@ -14,7 +14,7 @@ const makePublicPreviewOrigin = (() => {
 })()
 
 const nextConfig: NextConfig = {
-  output: "export", // 静态导出（Cloudflare Pages 部署）
+  output: "export",
   async headers() {
     // Payload responses can contain member-only data; page caching is separate.
     return [

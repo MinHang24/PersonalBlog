@@ -1,8 +1,8 @@
-@import "../../../styles/fonts.css";
+@import "../../styles/fonts.css";
 @import "tailwindcss";
 @import "@figma/astraui/styles.css";
 @import "astro-liquid-glass/styles/glass.css";
-@import "../../../styles/global.css";
+@import "../../styles/global.css";
 
 /* The glass package is consumed as framework-neutral CSS, without its Astro runtime. */
 .figma-custom-code-fragment {

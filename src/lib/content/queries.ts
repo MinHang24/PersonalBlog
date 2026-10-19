@@ -22,19 +22,7 @@ async function loadArticles(): Promise<any[]> {
 }
 
 export async function getPublicSiteSettings() {
-  return {
-    siteTitle: site.siteTitle,
-    siteSubtitle: site.siteSubtitle,
-    authorName: site.authorName,
-    initials: site.initials,
-    avatarUrl: site.avatarUrl,
-    tagline: site.tagline,
-    bio: site.bio,
-    email: site.email,
-    githubUrl: site.githubUrl,
-    socialLinks: site.socialLinks,
-    expertise: site.expertise,
-  }
+  return site
 }
 
 export async function getPublishedPostSummaries() {
@@ -52,6 +40,7 @@ export async function getPublishedPostSummaries() {
 
 export async function getPublishedProjects() {
   return projects.map((p: Project) => ({
+    slug: p.id,
     id: p.id,
     title: p.title,
     description: p.description,
@@ -63,9 +52,47 @@ export async function getPublishedProjects() {
   }))
 }
 
+export async function getPublishedProject(slug: string) {
+  return getProjectDetail(slug)
+}
+
+export async function getPublishedPost(slug: string) {
+  return getPostDetail(slug)
+}
+
 export async function getPostDetail(slug: string) {
   const articles = await loadArticles()
-  return articles.find((a: any) => a.slug === slug) || null
+  const a: any = articles.find((x: any) => x.slug === slug)
+  if (!a) return null
+  // blocks → Lexical RichDocument（最小转换：paragraph/heading）
+  const children: any[] = []
+  const headings: any[] = []
+  for (const b of a.blocks || []) {
+    if (b.kind === "heading") {
+      children.push({
+        type: "heading",
+        tag: `h${b.level || 2}`,
+        children: [{ type: "text", text: b.text || "", format: 0 }],
+      })
+      headings.push({ id: b.id, text: b.text, level: b.level || 2 })
+    } else if (b.kind === "paragraph") {
+      children.push({
+        type: "paragraph",
+        children: [{ type: "text", text: (b.content || []).join(""), format: 0 }],
+      })
+    } else if (b.kind === "code") {
+      children.push({
+        type: "paragraph",
+        children: [{ type: "text", text: b.code || "", format: 16 }],
+      })
+    }
+  }
+  return {
+    ...a,
+    readingTime: a.readingTime || 5,
+    content: { root: { type: "root", children, direction: null, format: "", indent: 0, version: 1 } },
+    headings,
+  }
 }
 
 export async function getProjectDetail(id: string) {
