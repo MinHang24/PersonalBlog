@@ -22,3 +22,12 @@ logs/
 /.plugins/
 /.opencode-skills/
 _disabled/
+
+# Figma CMS
+.env
+.env.local
+lambda.zip
+
+# Local migration backups
+/migration-backup-*/
+*.backup

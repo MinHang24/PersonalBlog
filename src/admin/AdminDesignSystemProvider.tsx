@@ -2,7 +2,7 @@
 
 import { useEffect, type ReactNode } from "react"
 import { useTheme } from "@payloadcms/ui"
-import "../app/(frontend)/styles.css"
+import "../app/styles.css"
 import "./theme.css"
 
 export function AdminDesignSystemProvider({

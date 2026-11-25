@@ -14,7 +14,10 @@ const makePublicPreviewOrigin = (() => {
 })()
 
 const nextConfig: NextConfig = {
-  output: "export",
+  // NOTE: static export conflicts with Payload admin route handlers
+  // (/admin/logout, /api/*). The Figma deploy pipeline expects `standalone`
+  // output (Lambda bundle); `pnpm export` opts into the static flow.
+  output: process.env.NEXT_STATIC_EXPORT ? "export" : "standalone",
   async headers() {
     // Payload responses can contain member-only data; page caching is separate.
     return [

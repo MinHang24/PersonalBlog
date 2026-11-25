@@ -9,8 +9,8 @@ import { ArticlePage } from "@/views/ArticlePage"
 
 type Props = { params: Promise<{ slug: string }> }
 
-export const dynamicParams = false
-export const dynamic = "force-static"
+export const dynamicParams = true
+export const dynamic = "force-dynamic"
 
 export async function generateStaticParams() {
   return (await getPublishedPostSummaries()).map(({ slug }) => ({ slug }))

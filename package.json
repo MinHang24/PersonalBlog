@@ -6,12 +6,13 @@
   "scripts": {
     "dev": "NODE_OPTIONS=--no-deprecation next dev --port ${PORT:-3000} --hostname 0.0.0.0",
     "build": "payload build",
-    "export": "next build && node scripts/flatten-rsc.mjs",
+    "export": "NEXT_STATIC_EXPORT=1 next build && node scripts/flatten-rsc.mjs",
     "start": "NODE_OPTIONS=--no-deprecation next start",
     "format": "oxfmt",
     "generate:importmap": "NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "NODE_OPTIONS=--no-deprecation payload generate:types",
-    "payload": "NODE_OPTIONS=--no-deprecation payload"
+    "payload": "NODE_OPTIONS=--no-deprecation payload",
+    "lambda:buildzip": "pnpm build && pnpm exec payloadcms-figma build-lambda-zip"
   },
   "dependencies": {
     "@figma/astraui": "1.0.0",
@@ -28,10 +29,10 @@
     "html-react-parser": "^5.2.10",
     "lucide-react": "0.487.0",
     "monaco-editor": "0.55.1",
-    "next": "16.4.0",
+    "next": "16.4.6",
     "payload": "4.0.0-beta.1",
-    "react": "19.2.1",
-    "react-dom": "19.2.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "sharp": "^0.35.4"
   },
   "devDependencies": {
@@ -49,13 +50,6 @@
   "engines": {
     "node": ">=20.9.0",
     "pnpm": "^9 || ^10"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "sharp",
-      "esbuild",
-      "unrs-resolver"
-    ]
   },
   "figma": {
     "kitAttachments": {

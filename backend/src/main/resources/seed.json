@@ -1,0 +1,2674 @@
+[
+  {
+    "kind": "posts",
+    "slug": "av-sync-basics",
+    "title": "音视频同步：时间戳与缓冲区",
+    "data": {
+      "slug": "av-sync-basics",
+      "title": "音视频同步：时间戳与缓冲区",
+      "excerpt": "画面与声音为什么会渐渐走散？从 PTS、时钟选择和缓冲策略，理解播放器里的时间。",
+      "category": "multimedia",
+      "tags": [
+        "音视频",
+        "时间戳",
+        "播放器"
+      ],
+      "publishedAt": "2025-05-16",
+      "blocks": [
+        {
+          "kind": "paragraph",
+          "content": [
+            "我们习惯把视频理解成连续播放的一组图片，但播放器真正处理的是带有时间信息的流。声音和画面各有节奏，解码耗时也会变化。如果简单地“解出一帧就画一帧”，在某些输入上看似正常，在另一些输入上却会越播越不同步。理解时间戳，是建立正确同步策略的起点。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "timestamp-basics",
+          "text": "时间戳不是帧编号"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "PTS 表示展示时间，DTS 表示解码时间。在存在帧重排序的编码中，两者可能不同。时间戳还需要结合 time base 才有实际意义：一个数值并不天然表示毫秒。跨流比较时间之前，应当先换算到统一的时间单位，避免整数精度与舍入带来逐渐积累的偏差。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "不要用固定帧率乘帧编号去替代真实 PTS，尤其是在可变帧率内容中。跳转后也不能沿用上一次的展示基准，应当等待新的有效时间戳并重新建立时钟关系。把“媒体时间”和“系统单调时间”分别命名，能减少很多隐蔽的单位错误。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "choose-clock",
+          "text": "先选一只可信的主时钟"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "常见策略以音频时钟为主，因为音频设备按照稳定的采样节奏消耗数据，而视频帧可以适度延迟或丢弃。没有音频时，可以使用外部单调时钟作为基准。音频时钟并不等于“已经送到设备的采样数量”，还需要扣除尚在设备缓冲区中的数据。"
+          ]
+        },
+        {
+          "kind": "code",
+          "language": "text",
+          "code": "音频时钟 = 已提交音频的结束时间 - 设备中尚未播放的时长\n视频偏差 = 当前视频帧 PTS - 音频时钟\n\n偏差较小：按正常节奏展示\n视频领先：稍后展示，等待主时钟\n视频落后：根据阈值丢弃过期画面"
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "buffer-budget",
+          "text": "缓冲区是在用延迟交换稳定"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "更大的缓冲区能吸收解码与网络波动，但也增加了响应延迟。点播、实时通话和本地预览的目标不同，不能套用同一组容量。最好按时间预算而不是仅按帧数量限制队列，因为不同内容的帧率、分辨率和解码成本可能相差很大。"
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              "解码队列：限制内存，并向上游施加背压。"
+            ],
+            [
+              "音频缓冲：保持设备持续输出，防止可听见的中断。"
+            ],
+            [
+              "展示队列：依据时间戳调度，而不是先进先出地立刻绘制。"
+            ],
+            [
+              "跳转处理：清空过期数据，重建时钟基准。"
+            ]
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "observe-drift",
+          "text": "把同步问题变成可观察的数据"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "记录音视频偏差分布、丢帧数量、队列时长和音频欠载次数，比只观察一段视频更有帮助。测试时覆盖可变帧率、长时间播放、暂停恢复、倍速与多次跳转。缓慢增加的偏差常与时间单位或时钟估计有关，突然跳变则可能来自队列未清理或时间戳不连续。"
+          ]
+        },
+        {
+          "kind": "quote",
+          "content": [
+            "同步不是让两个循环跑得一样快，而是让每一份数据在正确的时间被呈现。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "先统一时间单位，再明确主时钟，最后按预算设计缓冲。这几个看起来朴素的选择，往往比不断调整延迟常量更能解决真正的问题。"
+          ]
+        }
+      ],
+      "readingTime": 5,
+      "content": {
+        "root": {
+          "type": "root",
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "我们习惯把视频理解成连续播放的一组图片，但播放器真正处理的是带有时间信息的流。声音和画面各有节奏，解码耗时也会变化。如果简单地“解出一帧就画一帧”，在某些输入上看似正常，在另一些输入上却会越播越不同步。理解时间戳，是建立正确同步策略的起点。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "时间戳不是帧编号",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "PTS 表示展示时间，DTS 表示解码时间。在存在帧重排序的编码中，两者可能不同。时间戳还需要结合 time base 才有实际意义：一个数值并不天然表示毫秒。跨流比较时间之前，应当先换算到统一的时间单位，避免整数精度与舍入带来逐渐积累的偏差。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "不要用固定帧率乘帧编号去替代真实 PTS，尤其是在可变帧率内容中。跳转后也不能沿用上一次的展示基准，应当等待新的有效时间戳并重新建立时钟关系。把“媒体时间”和“系统单调时间”分别命名，能减少很多隐蔽的单位错误。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "先选一只可信的主时钟",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "常见策略以音频时钟为主，因为音频设备按照稳定的采样节奏消耗数据，而视频帧可以适度延迟或丢弃。没有音频时，可以使用外部单调时钟作为基准。音频时钟并不等于“已经送到设备的采样数量”，还需要扣除尚在设备缓冲区中的数据。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "音频时钟 = 已提交音频的结束时间 - 设备中尚未播放的时长\n视频偏差 = 当前视频帧 PTS - 音频时钟\n\n偏差较小：按正常节奏展示\n视频领先：稍后展示，等待主时钟\n视频落后：根据阈值丢弃过期画面",
+                  "format": 16
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "缓冲区是在用延迟交换稳定",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "更大的缓冲区能吸收解码与网络波动，但也增加了响应延迟。点播、实时通话和本地预览的目标不同，不能套用同一组容量。最好按时间预算而不是仅按帧数量限制队列，因为不同内容的帧率、分辨率和解码成本可能相差很大。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "把同步问题变成可观察的数据",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "记录音视频偏差分布、丢帧数量、队列时长和音频欠载次数，比只观察一段视频更有帮助。测试时覆盖可变帧率、长时间播放、暂停恢复、倍速与多次跳转。缓慢增加的偏差常与时间单位或时钟估计有关，突然跳变则可能来自队列未清理或时间戳不连续。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "先统一时间单位，再明确主时钟，最后按预算设计缓冲。这几个看起来朴素的选择，往往比不断调整延迟常量更能解决真正的问题。",
+                  "format": 0
+                }
+              ]
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "version": 1
+        }
+      },
+      "headings": [
+        {
+          "id": "timestamp-basics",
+          "text": "时间戳不是帧编号",
+          "level": 2
+        },
+        {
+          "id": "choose-clock",
+          "text": "先选一只可信的主时钟",
+          "level": 2
+        },
+        {
+          "id": "buffer-budget",
+          "text": "缓冲区是在用延迟交换稳定",
+          "level": 2
+        },
+        {
+          "id": "observe-drift",
+          "text": "把同步问题变成可观察的数据",
+          "level": 2
+        }
+      ]
+    }
+  },
+  {
+    "kind": "posts",
+    "slug": "desktop-state-persistence",
+    "title": "桌面应用的窗口状态与本地配置",
+    "data": {
+      "slug": "desktop-state-persistence",
+      "title": "桌面应用的窗口状态与本地配置",
+      "excerpt": "记住窗口，不记住错误。用版本、校验和安全默认值，让下次打开的体验依然可靠。",
+      "category": "desktop",
+      "tags": [
+        "桌面应用",
+        "本地配置",
+        "工程实践"
+      ],
+      "publishedAt": "2025-05-08",
+      "blocks": [
+        {
+          "kind": "paragraph",
+          "content": [
+            "记住上次的窗口大小，看起来是一个很小的功能。但换了显示器、调整系统缩放或拔掉外接屏幕后，原来的坐标可能让窗口彻底消失。持久化状态的目标不是原样恢复每一个数字，而是在新的环境里恢复用户的意图。这需要校验、回退和明确的数据边界。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "separate-state",
+          "text": "区分偏好、会话与派生状态"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "主题和阅读选项是用户偏好，当前打开的页面属于会话状态，设备可用区域则是环境数据。不要把它们混在一个随时被覆盖的大对象中。偏好可以长期保存，会话可以过期，派生状态则应在启动时重新计算。这样升级或清理时才知道哪些数据值得保留。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "validate-on-read",
+          "text": "读取配置时重新建立信任"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "本地文件同样是不可信的输入：可能被手动编辑、只写了一半，或者来自旧版本。解析成功不代表数据有效，需要逐字段检查类型、范围与枚举。无效字段回到默认值，而不是让整个应用启动失败。涉及路径或系统操作的配置，还要在执行边界再次验证。"
+          ]
+        },
+        {
+          "kind": "code",
+          "language": "typescript",
+          "code": "type Preferences = {\n  version: 1\n  theme: \"light\" | \"dark\" | \"system\"\n  window: { width: number; height: number }\n}\n\nfunction validDimension(value: unknown, fallback: number) {\n  return typeof value === \"number\" && Number.isFinite(value)\n    ? Math.min(3840, Math.max(600, value))\n    : fallback\n}"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "恢复窗口位置前，要检查它与当前任意显示器是否存在足够的交集。如果没有，就把窗口放到主屏的可见区域。最大化状态应该单独保存，避免把最大化时的尺寸误当成普通窗口尺寸。不同平台的窗口边框与缩放行为也需要各自验证。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "safe-writes",
+          "text": "把写入变成一个完整动作"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "频繁的窗口变化事件不应该每次都写磁盘。使用防抖合并更新，在退出时刷新最后一次状态。文件存储可以先写临时文件，再通过同一文件系统中的重命名替换正式文件，降低中途退出留下半个 JSON 的风险。需要注意原子替换行为在不同平台上的差异。"
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              "数据结构包含明确的版本号。"
+            ],
+            [
+              "读取后校验，缺失字段使用稳定默认值。"
+            ],
+            [
+              "写入有节流，不阻塞关键交互。"
+            ],
+            [
+              "保存失败有诊断信息，但不让窗口无法关闭。"
+            ]
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "migration",
+          "text": "升级时迁移意图，而不是堆积兼容分支"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "当配置结构变化时，集中编写从旧版本到新版本的迁移函数。迁移应该是可测试的纯转换，处理后再统一校验。不要让每个界面组件分别理解所有历史版本。对无法识别的未来版本保留原文件，并使用安全默认值，避免旧程序覆盖新程序的数据。"
+          ]
+        },
+        {
+          "kind": "quote",
+          "content": [
+            "可靠的持久化，不是永远保存成功，而是即使保存失败，用户也能再次正常打开应用。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "好的默认值、清晰的数据分类和独立的迁移层，让一个看似琐碎的小功能拥有可预测的行为。真正值得记住的是使用习惯，而不是上一次运行环境中的所有细节。"
+          ]
+        }
+      ],
+      "readingTime": 5,
+      "content": {
+        "root": {
+          "type": "root",
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "记住上次的窗口大小，看起来是一个很小的功能。但换了显示器、调整系统缩放或拔掉外接屏幕后，原来的坐标可能让窗口彻底消失。持久化状态的目标不是原样恢复每一个数字，而是在新的环境里恢复用户的意图。这需要校验、回退和明确的数据边界。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "区分偏好、会话与派生状态",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "主题和阅读选项是用户偏好，当前打开的页面属于会话状态，设备可用区域则是环境数据。不要把它们混在一个随时被覆盖的大对象中。偏好可以长期保存，会话可以过期，派生状态则应在启动时重新计算。这样升级或清理时才知道哪些数据值得保留。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "读取配置时重新建立信任",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "本地文件同样是不可信的输入：可能被手动编辑、只写了一半，或者来自旧版本。解析成功不代表数据有效，需要逐字段检查类型、范围与枚举。无效字段回到默认值，而不是让整个应用启动失败。涉及路径或系统操作的配置，还要在执行边界再次验证。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "type Preferences = {\n  version: 1\n  theme: \"light\" | \"dark\" | \"system\"\n  window: { width: number; height: number }\n}\n\nfunction validDimension(value: unknown, fallback: number) {\n  return typeof value === \"number\" && Number.isFinite(value)\n    ? Math.min(3840, Math.max(600, value))\n    : fallback\n}",
+                  "format": 16
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "恢复窗口位置前，要检查它与当前任意显示器是否存在足够的交集。如果没有，就把窗口放到主屏的可见区域。最大化状态应该单独保存，避免把最大化时的尺寸误当成普通窗口尺寸。不同平台的窗口边框与缩放行为也需要各自验证。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "把写入变成一个完整动作",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "频繁的窗口变化事件不应该每次都写磁盘。使用防抖合并更新，在退出时刷新最后一次状态。文件存储可以先写临时文件，再通过同一文件系统中的重命名替换正式文件，降低中途退出留下半个 JSON 的风险。需要注意原子替换行为在不同平台上的差异。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "升级时迁移意图，而不是堆积兼容分支",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "当配置结构变化时，集中编写从旧版本到新版本的迁移函数。迁移应该是可测试的纯转换，处理后再统一校验。不要让每个界面组件分别理解所有历史版本。对无法识别的未来版本保留原文件，并使用安全默认值，避免旧程序覆盖新程序的数据。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "好的默认值、清晰的数据分类和独立的迁移层，让一个看似琐碎的小功能拥有可预测的行为。真正值得记住的是使用习惯，而不是上一次运行环境中的所有细节。",
+                  "format": 0
+                }
+              ]
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "version": 1
+        }
+      },
+      "headings": [
+        {
+          "id": "separate-state",
+          "text": "区分偏好、会话与派生状态",
+          "level": 2
+        },
+        {
+          "id": "validate-on-read",
+          "text": "读取配置时重新建立信任",
+          "level": 2
+        },
+        {
+          "id": "safe-writes",
+          "text": "把写入变成一个完整动作",
+          "level": 2
+        },
+        {
+          "id": "migration",
+          "text": "升级时迁移意图，而不是堆积兼容分支",
+          "level": 2
+        }
+      ]
+    }
+  },
+  {
+    "kind": "posts",
+    "slug": "ffmpeg-media-pipeline",
+    "title": "用 FFmpeg 组织可靠的媒体处理流水线",
+    "data": {
+      "slug": "ffmpeg-media-pipeline",
+      "title": "用 FFmpeg 组织可靠的媒体处理流水线",
+      "excerpt": "从一条命令到一条流水线：让探测、转码、校验和发布各司其职，失败也可以安全重试。",
+      "category": "multimedia",
+      "tags": [
+        "FFmpeg",
+        "音视频",
+        "流水线"
+      ],
+      "publishedAt": "2025-06-08",
+      "blocks": [
+        {
+          "kind": "paragraph",
+          "content": [
+            "能成功运行的 FFmpeg 命令，只是媒体处理系统的起点。面对不同编码、损坏文件、异常时间戳和资源限制，一条超长命令很快就会变成难以排查的黑盒。把处理过程拆成几个有输入、输出和验证条件的阶段，才能让它成为可以维护的流水线。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "probe-first",
+          "text": "在处理之前，先了解输入"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "使用 ffprobe 读取容器、流、编码格式、尺寸与时长，并保留结构化结果。不要仅凭扩展名决定处理方式，也不要假设每个视频都有音轨。输入探测还能帮助选择合理的处理策略，例如是否需要旋转、补齐奇数尺寸，以及能否直接复用编码而不做转码。"
+          ]
+        },
+        {
+          "kind": "code",
+          "language": "shell",
+          "code": "ffprobe -v error \\\n  -show_format \\\n  -show_streams \\\n  -of json \\\n  input.mp4"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "对探测结果建立最小约束：至少存在一条目标流，尺寸在可接受范围内，时长信息可解释。某些输入没有可靠的总时长，应当允许未知进度，而不是为了展示百分比编造一个值。对异常输入尽早失败，比等待转码到最后一步更节约资源。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "explicit-stages",
+          "text": "让每个阶段都产生可识别的产物"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "一个常见划分是探测、规范化、转码、校验和发布。中间结果写到任务独占的临时目录，只有全部校验通过后才移动到最终位置。避免直接覆盖原始文件；重试时根据输入指纹和处理参数判断是否可以复用中间结果，而不是仅仅检查文件是否存在。"
+          ]
+        },
+        {
+          "kind": "code",
+          "language": "shell",
+          "code": "ffmpeg -hide_banner -nostdin -i input.mp4 \\\n  -map 0:v:0 -map 0:a:0? \\\n  -c:v libx264 -preset medium -crf 22 \\\n  -c:a aac -b:a 128k \\\n  -movflags +faststart \\\n  output.pending.mp4"
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "validation",
+          "text": "进程成功，不代表产物正确"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "退出码为零只是最低要求。输出文件还应当能被重新探测，包含预期的流，时长差异在合理范围内，必要时抽样解码。对于重要任务，还需要验证音轨、分辨率和关键帧策略。校验规则应由使用场景决定，不必把所有输入都强制变成同一种格式。"
+          ]
+        },
+        {
+          "kind": "list",
+          "ordered": true,
+          "items": [
+            [
+              "输入探测：得到明确的流信息和处理参数。"
+            ],
+            [
+              "资源调度：控制 CPU、磁盘与同时运行的进程数量。"
+            ],
+            [
+              "转码执行：记录命令、版本、退出状态和错误摘要。"
+            ],
+            [
+              "产物校验：重新探测，通过后原子发布。"
+            ]
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "retry-and-cleanup",
+          "text": "让重试和清理同样可靠"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "重试前先区分暂时性故障与确定性输入错误。磁盘临时不可用可以延迟重试，损坏的输入重复执行通常没有意义。取消任务时终止子进程并等待它退出，再清理临时文件。对超时退出留下任务阶段和错误上下文，而不是只记录“处理失败”。"
+          ]
+        },
+        {
+          "kind": "quote",
+          "content": [
+            "一条好的媒体流水线，不只是知道如何完成，也知道如何解释失败、如何重新开始。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "把长命令拆成稳定阶段后，优化会更有方向：瓶颈是探测、解码、编码还是磁盘，都可以单独观察。可靠性来自明确的契约，而不是越来越多难以解释的命令参数。"
+          ]
+        }
+      ],
+      "readingTime": 5,
+      "content": {
+        "root": {
+          "type": "root",
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "能成功运行的 FFmpeg 命令，只是媒体处理系统的起点。面对不同编码、损坏文件、异常时间戳和资源限制，一条超长命令很快就会变成难以排查的黑盒。把处理过程拆成几个有输入、输出和验证条件的阶段，才能让它成为可以维护的流水线。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "在处理之前，先了解输入",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "使用 ffprobe 读取容器、流、编码格式、尺寸与时长，并保留结构化结果。不要仅凭扩展名决定处理方式，也不要假设每个视频都有音轨。输入探测还能帮助选择合理的处理策略，例如是否需要旋转、补齐奇数尺寸，以及能否直接复用编码而不做转码。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "ffprobe -v error \\\n  -show_format \\\n  -show_streams \\\n  -of json \\\n  input.mp4",
+                  "format": 16
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "对探测结果建立最小约束：至少存在一条目标流，尺寸在可接受范围内，时长信息可解释。某些输入没有可靠的总时长，应当允许未知进度，而不是为了展示百分比编造一个值。对异常输入尽早失败，比等待转码到最后一步更节约资源。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "让每个阶段都产生可识别的产物",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "一个常见划分是探测、规范化、转码、校验和发布。中间结果写到任务独占的临时目录，只有全部校验通过后才移动到最终位置。避免直接覆盖原始文件；重试时根据输入指纹和处理参数判断是否可以复用中间结果，而不是仅仅检查文件是否存在。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "ffmpeg -hide_banner -nostdin -i input.mp4 \\\n  -map 0:v:0 -map 0:a:0? \\\n  -c:v libx264 -preset medium -crf 22 \\\n  -c:a aac -b:a 128k \\\n  -movflags +faststart \\\n  output.pending.mp4",
+                  "format": 16
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "进程成功，不代表产物正确",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "退出码为零只是最低要求。输出文件还应当能被重新探测，包含预期的流，时长差异在合理范围内，必要时抽样解码。对于重要任务，还需要验证音轨、分辨率和关键帧策略。校验规则应由使用场景决定，不必把所有输入都强制变成同一种格式。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "让重试和清理同样可靠",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "重试前先区分暂时性故障与确定性输入错误。磁盘临时不可用可以延迟重试，损坏的输入重复执行通常没有意义。取消任务时终止子进程并等待它退出，再清理临时文件。对超时退出留下任务阶段和错误上下文，而不是只记录“处理失败”。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "把长命令拆成稳定阶段后，优化会更有方向：瓶颈是探测、解码、编码还是磁盘，都可以单独观察。可靠性来自明确的契约，而不是越来越多难以解释的命令参数。",
+                  "format": 0
+                }
+              ]
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "version": 1
+        }
+      },
+      "headings": [
+        {
+          "id": "probe-first",
+          "text": "在处理之前，先了解输入",
+          "level": 2
+        },
+        {
+          "id": "explicit-stages",
+          "text": "让每个阶段都产生可识别的产物",
+          "level": 2
+        },
+        {
+          "id": "validation",
+          "text": "进程成功，不代表产物正确",
+          "level": 2
+        },
+        {
+          "id": "retry-and-cleanup",
+          "text": "让重试和清理同样可靠",
+          "level": 2
+        }
+      ]
+    }
+  },
+  {
+    "kind": "posts",
+    "slug": "go-context-cancellation",
+    "title": "把 context 取消信号传到任务边界",
+    "data": {
+      "slug": "go-context-cancellation",
+      "title": "把 context 取消信号传到任务边界",
+      "excerpt": "取消不是一个布尔值，而是一段生命周期。让超时、退出和资源释放沿着调用链自然传播。",
+      "category": "go",
+      "tags": [
+        "Go",
+        "Context",
+        "可靠性"
+      ],
+      "publishedAt": "2025-06-12",
+      "blocks": [
+        {
+          "kind": "paragraph",
+          "content": [
+            "在一个服务里，最难发现的浪费往往来自已经没有人等待的工作：请求结束了，查询还在运行；窗口关闭了，后台任务还在重试。context 的作用，是让一组有关联的操作共享生命周期，而不是给每个函数增加一个看起来规范的参数。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "lifecycle",
+          "text": "取消表达的是生命周期"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "从请求入口创建的 context 应当传到数据库、HTTP 调用和任务排队等真正等待的边界。不要在中间层随手替换成 context.Background，这会切断取消关系。如果某个任务需要脱离请求继续执行，那是一个新的生命周期，需要独立的拥有者和退出机制。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "ctx.Err 说明调用是否已被取消，但它不会主动停止任意一段计算。计算密集的循环需要在合适的批次间检查信号；阻塞的网络调用则应使用支持 context 的 API。先定位操作在哪里等待，才能判断取消逻辑是否真的有效。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "deadlines",
+          "text": "在等待处建立截止时间"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "截止时间应当来自整体预算。上游只剩一秒时，下游不应该重新得到五秒。WithTimeout 会继承更早的父级截止时间，这使预算能够自然收敛。即使操作很快完成，也要调用 cancel，及时释放计时器与父子关系。示例中的 defer 不是取消业务，而是完成作用域的资源回收。"
+          ]
+        },
+        {
+          "kind": "code",
+          "language": "go",
+          "code": "func fetch(ctx context.Context, url string) error {\n    ctx, cancel := context.WithTimeout(ctx, 2*time.Second)\n    defer cancel()\n\n    req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)\n    if err != nil {\n        return fmt.Errorf(\"build request: %w\", err)\n    }\n    res, err := http.DefaultClient.Do(req)\n    if err != nil {\n        return fmt.Errorf(\"fetch media: %w\", err)\n    }\n    defer res.Body.Close()\n    return nil\n}"
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "bounded-wait",
+          "text": "提交和重试也要能够取消"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "不仅执行操作需要监听取消，提交到队列、等待信号量、退避重试也需要。把 time.Sleep 换成可选择的计时器，让 select 同时等待定时器和 ctx.Done。否则一次本来两秒就应该结束的任务，可能在重试间隔里额外停留几十秒。"
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              "把 context 作为第一个参数传递，不把它长期存进业务对象。"
+            ],
+            [
+              "取消后停止产生新工作，已经执行的操作按约定退出。"
+            ],
+            [
+              "区分调用方取消与真实业务失败，避免误报异常。"
+            ],
+            [
+              "不把可选业务参数放进 context.Value。"
+            ]
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "test-cancel",
+          "text": "用测试验证“确实停止了”"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "测试取消行为不应只断言返回了一个错误，还要确认后台 goroutine 能退出、资源能够释放、后续步骤没有继续发生。可以使用通知通道控制任务到达某个阶段，再触发取消，以免测试依赖不稳定的 sleep。对于外部 API，使用可控制的本地测试服务制造阻塞。"
+          ]
+        },
+        {
+          "kind": "quote",
+          "content": [
+            "取消信号抵达真正的工作边界时，context 才从一个参数变成了可靠性机制。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "当生命周期与资源所有权被清晰表达，超时就不再是零散的补丁。入口负责建立预算，中间层负责保持关系，边界负责及时响应，这三件事比四处检查一个状态值更重要。"
+          ]
+        }
+      ],
+      "readingTime": 5,
+      "content": {
+        "root": {
+          "type": "root",
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "在一个服务里，最难发现的浪费往往来自已经没有人等待的工作：请求结束了，查询还在运行；窗口关闭了，后台任务还在重试。context 的作用，是让一组有关联的操作共享生命周期，而不是给每个函数增加一个看起来规范的参数。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "取消表达的是生命周期",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "从请求入口创建的 context 应当传到数据库、HTTP 调用和任务排队等真正等待的边界。不要在中间层随手替换成 context.Background，这会切断取消关系。如果某个任务需要脱离请求继续执行，那是一个新的生命周期，需要独立的拥有者和退出机制。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "ctx.Err 说明调用是否已被取消，但它不会主动停止任意一段计算。计算密集的循环需要在合适的批次间检查信号；阻塞的网络调用则应使用支持 context 的 API。先定位操作在哪里等待，才能判断取消逻辑是否真的有效。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "在等待处建立截止时间",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "截止时间应当来自整体预算。上游只剩一秒时，下游不应该重新得到五秒。WithTimeout 会继承更早的父级截止时间，这使预算能够自然收敛。即使操作很快完成，也要调用 cancel，及时释放计时器与父子关系。示例中的 defer 不是取消业务，而是完成作用域的资源回收。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "func fetch(ctx context.Context, url string) error {\n    ctx, cancel := context.WithTimeout(ctx, 2*time.Second)\n    defer cancel()\n\n    req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)\n    if err != nil {\n        return fmt.Errorf(\"build request: %w\", err)\n    }\n    res, err := http.DefaultClient.Do(req)\n    if err != nil {\n        return fmt.Errorf(\"fetch media: %w\", err)\n    }\n    defer res.Body.Close()\n    return nil\n}",
+                  "format": 16
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "提交和重试也要能够取消",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "不仅执行操作需要监听取消，提交到队列、等待信号量、退避重试也需要。把 time.Sleep 换成可选择的计时器，让 select 同时等待定时器和 ctx.Done。否则一次本来两秒就应该结束的任务，可能在重试间隔里额外停留几十秒。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "用测试验证“确实停止了”",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "测试取消行为不应只断言返回了一个错误，还要确认后台 goroutine 能退出、资源能够释放、后续步骤没有继续发生。可以使用通知通道控制任务到达某个阶段，再触发取消，以免测试依赖不稳定的 sleep。对于外部 API，使用可控制的本地测试服务制造阻塞。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "当生命周期与资源所有权被清晰表达，超时就不再是零散的补丁。入口负责建立预算，中间层负责保持关系，边界负责及时响应，这三件事比四处检查一个状态值更重要。",
+                  "format": 0
+                }
+              ]
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "version": 1
+        }
+      },
+      "headings": [
+        {
+          "id": "lifecycle",
+          "text": "取消表达的是生命周期",
+          "level": 2
+        },
+        {
+          "id": "deadlines",
+          "text": "在等待处建立截止时间",
+          "level": 2
+        },
+        {
+          "id": "bounded-wait",
+          "text": "提交和重试也要能够取消",
+          "level": 2
+        },
+        {
+          "id": "test-cancel",
+          "text": "用测试验证“确实停止了”",
+          "level": 2
+        }
+      ]
+    }
+  },
+  {
+    "kind": "posts",
+    "slug": "go-graceful-shutdown",
+    "title": "一个 Go 服务如何优雅退出",
+    "data": {
+      "slug": "go-graceful-shutdown",
+      "title": "一个 Go 服务如何优雅退出",
+      "excerpt": "停止接收、等待在途、释放资源。把进程退出写成可测试的流程，而不是最后一行 os.Exit。",
+      "category": "go",
+      "tags": [
+        "Go",
+        "服务端",
+        "生命周期"
+      ],
+      "publishedAt": "2025-05-28",
+      "blocks": [
+        {
+          "kind": "paragraph",
+          "content": [
+            "服务启动路径通常得到很多关注，退出路径却常常只剩一个信号处理函数。实际上，发布、扩容、配置更新都会频繁触发退出。如果停机流程没有顺序，请求可能完成了一半，消息可能被重复处理，日志也可能来不及写出。优雅退出应该从服务设计之初就被当作正常路径。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "stop-accepting",
+          "text": "第一步：不再接收新工作"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "收到终止信号后，先让就绪检查返回不可用，并停止消费新的队列消息。负载均衡器感知状态通常需要时间，因此需要根据部署环境保留适当的摘流窗口。不要在这一步就关闭数据库，因为仍在处理的请求可能还需要它。退出顺序应与依赖关系的逆序一致。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "wait-in-flight",
+          "text": "第二步：给在途请求一段时间"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "http.Server.Shutdown 会关闭监听并等待活动连接，但这个等待不应该没有期限。使用一个独立于已经取消的根 context 的清理上下文，为剩余请求分配最终预算。这里创建新的 Background 是有意义的：它属于退出阶段，而不是继续假装请求仍然有效。"
+          ]
+        },
+        {
+          "kind": "code",
+          "language": "go",
+          "code": "signals, stop := signal.NotifyContext(\n    context.Background(), os.Interrupt, syscall.SIGTERM,\n)\ndefer stop()\n\n<-signals.Done()\n\nshutdownCtx, cancel := context.WithTimeout(\n    context.Background(), 10*time.Second,\n)\ndefer cancel()\n\nif err := server.Shutdown(shutdownCtx); err != nil {\n    log.Printf(\"shutdown deadline: %v\", err)\n    _ = server.Close()\n}"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "长期连接、后台任务和自建 goroutine 不一定在 HTTP 服务的管理范围内，需要明确注册到自己的生命周期协调器。每个模块提供停止接收和等待完成两个动作，通常比暴露一个含义不清的 Close 更容易组织。等待期限耗尽后可以强制结束，但要留下足够的诊断信息。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "release-resources",
+          "text": "第三步：按依赖顺序释放资源"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "等业务工作结束后，再关闭连接池、临时目录和遥测客户端。日志系统尽量最后关闭，这样清理阶段的错误仍然可见。避免在多个组件里重复关闭同一个资源；资源创建者负责释放，使用者只负责停止使用。对于不可避免的清理失败，记录上下文，但不要无限重试。"
+          ]
+        },
+        {
+          "kind": "list",
+          "ordered": true,
+          "items": [
+            [
+              "关闭就绪状态，停止新的任务来源。"
+            ],
+            [
+              "等待在途请求，广播后台任务退出信号。"
+            ],
+            [
+              "等待 worker 并持久化必要的进度。"
+            ],
+            [
+              "关闭数据连接，刷新日志与可观测数据。"
+            ]
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "shutdown-tests",
+          "text": "让退出流程可重复验证"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "为关闭过程编写集成测试：先创建一个可控的慢请求，开始退出，再确认请求在预算内完成，而新请求无法进入。还要验证第二次信号、超时强制退出和空闲服务退出。不要仅用进程最终结束来判断成功，因为丢失的任务同样会让进程很快结束。"
+          ]
+        },
+        {
+          "kind": "quote",
+          "content": [
+            "优雅退出不是“多等几秒”，而是在有限时间内兑现已经接受的工作承诺。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "当关闭逻辑能独立运行、能被观察、能在测试中重放，发布就会变得平常。一个服务的可靠性，不仅取决于它运行时做得多好，也取决于它离开时留下了什么。"
+          ]
+        }
+      ],
+      "readingTime": 5,
+      "content": {
+        "root": {
+          "type": "root",
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "服务启动路径通常得到很多关注，退出路径却常常只剩一个信号处理函数。实际上，发布、扩容、配置更新都会频繁触发退出。如果停机流程没有顺序，请求可能完成了一半，消息可能被重复处理，日志也可能来不及写出。优雅退出应该从服务设计之初就被当作正常路径。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "第一步：不再接收新工作",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "收到终止信号后，先让就绪检查返回不可用，并停止消费新的队列消息。负载均衡器感知状态通常需要时间，因此需要根据部署环境保留适当的摘流窗口。不要在这一步就关闭数据库，因为仍在处理的请求可能还需要它。退出顺序应与依赖关系的逆序一致。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "第二步：给在途请求一段时间",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "http.Server.Shutdown 会关闭监听并等待活动连接，但这个等待不应该没有期限。使用一个独立于已经取消的根 context 的清理上下文，为剩余请求分配最终预算。这里创建新的 Background 是有意义的：它属于退出阶段，而不是继续假装请求仍然有效。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "signals, stop := signal.NotifyContext(\n    context.Background(), os.Interrupt, syscall.SIGTERM,\n)\ndefer stop()\n\n<-signals.Done()\n\nshutdownCtx, cancel := context.WithTimeout(\n    context.Background(), 10*time.Second,\n)\ndefer cancel()\n\nif err := server.Shutdown(shutdownCtx); err != nil {\n    log.Printf(\"shutdown deadline: %v\", err)\n    _ = server.Close()\n}",
+                  "format": 16
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "长期连接、后台任务和自建 goroutine 不一定在 HTTP 服务的管理范围内，需要明确注册到自己的生命周期协调器。每个模块提供停止接收和等待完成两个动作，通常比暴露一个含义不清的 Close 更容易组织。等待期限耗尽后可以强制结束，但要留下足够的诊断信息。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "第三步：按依赖顺序释放资源",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "等业务工作结束后，再关闭连接池、临时目录和遥测客户端。日志系统尽量最后关闭，这样清理阶段的错误仍然可见。避免在多个组件里重复关闭同一个资源；资源创建者负责释放，使用者只负责停止使用。对于不可避免的清理失败，记录上下文，但不要无限重试。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "让退出流程可重复验证",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "为关闭过程编写集成测试：先创建一个可控的慢请求，开始退出，再确认请求在预算内完成，而新请求无法进入。还要验证第二次信号、超时强制退出和空闲服务退出。不要仅用进程最终结束来判断成功，因为丢失的任务同样会让进程很快结束。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "当关闭逻辑能独立运行、能被观察、能在测试中重放，发布就会变得平常。一个服务的可靠性，不仅取决于它运行时做得多好，也取决于它离开时留下了什么。",
+                  "format": 0
+                }
+              ]
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "version": 1
+        }
+      },
+      "headings": [
+        {
+          "id": "stop-accepting",
+          "text": "第一步：不再接收新工作",
+          "level": 2
+        },
+        {
+          "id": "wait-in-flight",
+          "text": "第二步：给在途请求一段时间",
+          "level": 2
+        },
+        {
+          "id": "release-resources",
+          "text": "第三步：按依赖顺序释放资源",
+          "level": 2
+        },
+        {
+          "id": "shutdown-tests",
+          "text": "让退出流程可重复验证",
+          "level": 2
+        }
+      ]
+    }
+  },
+  {
+    "kind": "posts",
+    "slug": "go-worker-pool",
+    "title": "Go 并发任务池：从可用到可控",
+    "data": {
+      "slug": "go-worker-pool",
+      "title": "Go 并发任务池：从可用到可控",
+      "excerpt": "当 goroutine 不再是答案本身：从并发限制、任务取消到优雅退出，构建一个真正可控的任务池。",
+      "category": "go",
+      "tags": [
+        "Go",
+        "并发编程",
+        "工程实践"
+      ],
+      "publishedAt": "2025-06-18",
+      "blocks": [
+        {
+          "kind": "paragraph",
+          "content": [
+            "启动一个 goroutine 很容易，但让一组并发任务稳定地完成，并不是加一个 go 关键字那么简单。当输入的速度超过处理速度，内存、连接和下游服务就会一起承受压力。这篇示例笔记从一个最小任务池出发，讨论并发系统真正需要的边界。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "define-boundaries",
+          "text": "先定义边界，再增加并发"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "任务池的目标不是“尽可能多地执行”，而是在有限资源中提供可预测的吞吐。首先列出任务消耗什么资源：CPU、数据库连接、文件句柄，还是远端接口配额。并发度应该由最紧张的资源决定。队列同样需要上限，否则只是把请求堆积从一个地方挪到另一个地方。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "一个实用的约定是把任务接收与任务执行分开。接收方负责说明任务是否已经进入队列；执行方负责报告任务是否完成。队列已满、任务超时和任务自身失败是三种不同状态，不应当用同一个模糊的错误掩盖它们。"
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              "并发上限：同时执行的任务数量。"
+            ],
+            [
+              "队列容量：允许等待的任务数量。"
+            ],
+            [
+              "接收策略：阻塞等待、立即拒绝，或由调用方重试。"
+            ],
+            [
+              "退出约定：停止接收后，等待任务还是取消任务。"
+            ]
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "minimal-worker",
+          "text": "一个可以解释清楚的 worker"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "下面的实现刻意保持简单：调用方拥有队列，worker 只消费队列。每个任务收到同一个生命周期上下文，便于将退出信号传到网络或文件操作。生产实现还需要收集任务结果，但结果通道也必须有消费者，否则 worker 会卡在报告结果这一步。"
+          ]
+        },
+        {
+          "kind": "code",
+          "language": "go",
+          "code": "type Job func(context.Context) error\n\nfunc worker(ctx context.Context, jobs <-chan Job) {\n    for {\n        select {\n        case <-ctx.Done():\n            return\n        case job, ok := <-jobs:\n            if !ok {\n                return\n            }\n            if err := job(ctx); err != nil {\n                log.Printf(\"job failed: %v\", err)\n            }\n        }\n    }\n}"
+        },
+        {
+          "kind": "heading",
+          "level": 3,
+          "id": "channel-ownership",
+          "text": "谁创建通道，谁负责关闭"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "关闭通道是所有权问题，不是清理习惯。多个生产者存在时，需要先确认它们全部停止，再关闭队列。不要在消费者中关闭输入通道，也不要用 recover 把重复关闭隐藏起来。把关闭动作集中到协调者中，通常比在每条路径上补一个 defer 更容易验证。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "backpressure",
+          "text": "背压是设计的一部分"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "当队列已满，让提交操作等待是一种自然的背压，但等待也必须能被取消。提交时同时监听 ctx.Done，才能避免客户端已经离开而提交方仍然占着连接。对于批处理任务，可以返回明确的繁忙状态，让上游按退避策略重试，而不是无限增长缓冲。"
+          ]
+        },
+        {
+          "kind": "table",
+          "headers": [
+            "指标",
+            "说明",
+            "观察方向"
+          ],
+          "rows": [
+            [
+              "等待时长",
+              "任务从提交到执行的间隔",
+              "是否持续增长"
+            ],
+            [
+              "执行时长",
+              "任务实际占用 worker 的时间",
+              "长尾与超时"
+            ],
+            [
+              "队列深度",
+              "当前等待任务数量",
+              "是否接近容量"
+            ],
+            [
+              "拒绝数量",
+              "无法接收的任务总数",
+              "上游是否需要限速"
+            ]
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "shutdown",
+          "text": "让退出也成为正常路径"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "退出时先停止接收新任务，再决定是否清空已有队列，最后等待 worker 结束。为这一过程设置独立的截止时间，避免一个无法取消的外部调用拖住整个进程。测试应当覆盖空队列退出、任务执行中取消、生产者阻塞时退出，以及重复发起关闭等情况。"
+          ]
+        },
+        {
+          "kind": "quote",
+          "content": [
+            "好的并发设计，不是让更多事情同时发生，而是让发生的事情始终处于可理解的边界之内。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "先写清生命周期，再选择合适的并发度；先看到队列与延迟，再谈性能优化。一个规模适中、职责明确的任务池，通常比一组精巧但难以解释的 goroutine 更值得长期维护。"
+          ]
+        }
+      ],
+      "readingTime": 5,
+      "content": {
+        "root": {
+          "type": "root",
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "启动一个 goroutine 很容易，但让一组并发任务稳定地完成，并不是加一个 go 关键字那么简单。当输入的速度超过处理速度，内存、连接和下游服务就会一起承受压力。这篇示例笔记从一个最小任务池出发，讨论并发系统真正需要的边界。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "先定义边界，再增加并发",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "任务池的目标不是“尽可能多地执行”，而是在有限资源中提供可预测的吞吐。首先列出任务消耗什么资源：CPU、数据库连接、文件句柄，还是远端接口配额。并发度应该由最紧张的资源决定。队列同样需要上限，否则只是把请求堆积从一个地方挪到另一个地方。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "一个实用的约定是把任务接收与任务执行分开。接收方负责说明任务是否已经进入队列；执行方负责报告任务是否完成。队列已满、任务超时和任务自身失败是三种不同状态，不应当用同一个模糊的错误掩盖它们。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "一个可以解释清楚的 worker",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "下面的实现刻意保持简单：调用方拥有队列，worker 只消费队列。每个任务收到同一个生命周期上下文，便于将退出信号传到网络或文件操作。生产实现还需要收集任务结果，但结果通道也必须有消费者，否则 worker 会卡在报告结果这一步。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "type Job func(context.Context) error\n\nfunc worker(ctx context.Context, jobs <-chan Job) {\n    for {\n        select {\n        case <-ctx.Done():\n            return\n        case job, ok := <-jobs:\n            if !ok {\n                return\n            }\n            if err := job(ctx); err != nil {\n                log.Printf(\"job failed: %v\", err)\n            }\n        }\n    }\n}",
+                  "format": 16
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h3",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "谁创建通道，谁负责关闭",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "关闭通道是所有权问题，不是清理习惯。多个生产者存在时，需要先确认它们全部停止，再关闭队列。不要在消费者中关闭输入通道，也不要用 recover 把重复关闭隐藏起来。把关闭动作集中到协调者中，通常比在每条路径上补一个 defer 更容易验证。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "背压是设计的一部分",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "当队列已满，让提交操作等待是一种自然的背压，但等待也必须能被取消。提交时同时监听 ctx.Done，才能避免客户端已经离开而提交方仍然占着连接。对于批处理任务，可以返回明确的繁忙状态，让上游按退避策略重试，而不是无限增长缓冲。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "让退出也成为正常路径",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "退出时先停止接收新任务，再决定是否清空已有队列，最后等待 worker 结束。为这一过程设置独立的截止时间，避免一个无法取消的外部调用拖住整个进程。测试应当覆盖空队列退出、任务执行中取消、生产者阻塞时退出，以及重复发起关闭等情况。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "先写清生命周期，再选择合适的并发度；先看到队列与延迟，再谈性能优化。一个规模适中、职责明确的任务池，通常比一组精巧但难以解释的 goroutine 更值得长期维护。",
+                  "format": 0
+                }
+              ]
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "version": 1
+        }
+      },
+      "headings": [
+        {
+          "id": "define-boundaries",
+          "text": "先定义边界，再增加并发",
+          "level": 2
+        },
+        {
+          "id": "minimal-worker",
+          "text": "一个可以解释清楚的 worker",
+          "level": 2
+        },
+        {
+          "id": "channel-ownership",
+          "text": "谁创建通道，谁负责关闭",
+          "level": 3
+        },
+        {
+          "id": "backpressure",
+          "text": "背压是设计的一部分",
+          "level": 2
+        },
+        {
+          "id": "shutdown",
+          "text": "让退出也成为正常路径",
+          "level": 2
+        }
+      ]
+    }
+  },
+  {
+    "kind": "posts",
+    "slug": "hongguo-manju-desktop-notes",
+    "title": "红果漫剧 PC 客户端：桌面交互设计笔记",
+    "data": {
+      "slug": "hongguo-manju-desktop-notes",
+      "title": "红果漫剧 PC 客户端：桌面交互设计笔记",
+      "excerpt": "从小屏到桌面，不只是放大。关于内容层级、键盘体验和跨平台边界的一次设计探索。",
+      "category": "desktop",
+      "tags": [
+        "Wails",
+        "Go",
+        "交互设计"
+      ],
+      "publishedAt": "2025-06-03",
+      "blocks": [
+        {
+          "kind": "paragraph",
+          "content": [
+            "这是一份围绕红果漫剧 PC 客户端的示例设计笔记，记录如何把以内容消费为中心的体验带到桌面。文中的界面构图属于设计示意，不代表已经发布的功能、版本或官方客户端。我们关注的是方法：如何利用更宽的空间，又不让界面变得复杂。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "desktop-not-enlarged-mobile",
+          "text": "桌面不是放大的移动端"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "手机界面的连续信息流适合单手浏览，但在大屏上直接拉宽，会让视线移动距离过长。桌面可以把导航、内容网格与阅读区域分开：固定导航提供方位，适当宽度的内容区保持节奏，次要操作则在需要时出现。空间更多，不意味着应该同时展示更多信息。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "优先确定三个核心动作：发现内容、继续观看、回到收藏。它们需要稳定的位置和明确的视觉层级。搜索、设置与账户等辅助操作不应抢占主要阅读空间。窗口变窄时，布局应该自然减少列数，而不是依赖横向滚动来维持一张缩小的桌面画布。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "keyboard-and-focus",
+          "text": "把键盘与焦点作为一等公民"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "鼠标悬停可以提供精细反馈，但桌面体验不能只为鼠标设计。导航和卡片需要可见的键盘焦点，返回操作应当回到原来浏览的位置。模态窗口关闭后恢复触发点焦点，搜索快捷键不能在输入中文时误触发。明确的焦点顺序，比增加更多快捷键更重要。"
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              "主要路径保持清晰的 Tab 顺序。"
+            ],
+            [
+              "返回列表时恢复滚动和筛选状态。"
+            ],
+            [
+              "宽窗口利用网格，窄窗口保持单列可读。"
+            ],
+            [
+              "空内容、加载和失败状态使用不同的说明。"
+            ]
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "frontend-native-boundary",
+          "text": "让本地能力留在清楚的边界里"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "采用 Go 与 Wails 的组合时，界面负责呈现与交互，本地层负责受约束的系统能力。不要让组件直接拼接文件系统路径或执行任意命令。跨边界的数据使用明确结构，并在本地层再次验证。界面错误需要翻译成用户能理解的信息，底层诊断则保留必要上下文。"
+          ]
+        },
+        {
+          "kind": "code",
+          "language": "typescript",
+          "code": "type WindowPreferences = {\n  width: number\n  height: number\n  maximized: boolean\n  theme: \"light\" | \"dark\" | \"system\"\n}\n\nfunction restoreSize(saved: WindowPreferences) {\n  return {\n    width: Math.max(800, saved.width),\n    height: Math.max(600, saved.height),\n  }\n}"
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "calm-material",
+          "text": "玻璃材质应该服务于内容"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "半透明表面可以传达层次，但正文和内容标题仍然需要稳定对比度。模糊只放在有限的导航与卡片层，不叠加无限多重透明面板。系统要求减少动态效果或增强对比度时，应当降低材质复杂度。不能让“看起来轻盈”变成“文字难以辨认”。"
+          ]
+        },
+        {
+          "kind": "quote",
+          "content": [
+            "好的桌面适配，不是把移动端所有东西放进一个更大的窗口，而是重新理解这块空间。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "这份探索不把尚未完成的功能写成成果。先验证最常用的浏览路径，再逐步补齐状态与边界，才能让一个有吸引力的构想成为真正耐用的软件。"
+          ]
+        }
+      ],
+      "readingTime": 5,
+      "content": {
+        "root": {
+          "type": "root",
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "这是一份围绕红果漫剧 PC 客户端的示例设计笔记，记录如何把以内容消费为中心的体验带到桌面。文中的界面构图属于设计示意，不代表已经发布的功能、版本或官方客户端。我们关注的是方法：如何利用更宽的空间，又不让界面变得复杂。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "桌面不是放大的移动端",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "手机界面的连续信息流适合单手浏览，但在大屏上直接拉宽，会让视线移动距离过长。桌面可以把导航、内容网格与阅读区域分开：固定导航提供方位，适当宽度的内容区保持节奏，次要操作则在需要时出现。空间更多，不意味着应该同时展示更多信息。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "优先确定三个核心动作：发现内容、继续观看、回到收藏。它们需要稳定的位置和明确的视觉层级。搜索、设置与账户等辅助操作不应抢占主要阅读空间。窗口变窄时，布局应该自然减少列数，而不是依赖横向滚动来维持一张缩小的桌面画布。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "把键盘与焦点作为一等公民",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "鼠标悬停可以提供精细反馈，但桌面体验不能只为鼠标设计。导航和卡片需要可见的键盘焦点，返回操作应当回到原来浏览的位置。模态窗口关闭后恢复触发点焦点，搜索快捷键不能在输入中文时误触发。明确的焦点顺序，比增加更多快捷键更重要。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "让本地能力留在清楚的边界里",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "采用 Go 与 Wails 的组合时，界面负责呈现与交互，本地层负责受约束的系统能力。不要让组件直接拼接文件系统路径或执行任意命令。跨边界的数据使用明确结构，并在本地层再次验证。界面错误需要翻译成用户能理解的信息，底层诊断则保留必要上下文。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "type WindowPreferences = {\n  width: number\n  height: number\n  maximized: boolean\n  theme: \"light\" | \"dark\" | \"system\"\n}\n\nfunction restoreSize(saved: WindowPreferences) {\n  return {\n    width: Math.max(800, saved.width),\n    height: Math.max(600, saved.height),\n  }\n}",
+                  "format": 16
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "玻璃材质应该服务于内容",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "半透明表面可以传达层次，但正文和内容标题仍然需要稳定对比度。模糊只放在有限的导航与卡片层，不叠加无限多重透明面板。系统要求减少动态效果或增强对比度时，应当降低材质复杂度。不能让“看起来轻盈”变成“文字难以辨认”。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "这份探索不把尚未完成的功能写成成果。先验证最常用的浏览路径，再逐步补齐状态与边界，才能让一个有吸引力的构想成为真正耐用的软件。",
+                  "format": 0
+                }
+              ]
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "version": 1
+        }
+      },
+      "headings": [
+        {
+          "id": "desktop-not-enlarged-mobile",
+          "text": "桌面不是放大的移动端",
+          "level": 2
+        },
+        {
+          "id": "keyboard-and-focus",
+          "text": "把键盘与焦点作为一等公民",
+          "level": 2
+        },
+        {
+          "id": "frontend-native-boundary",
+          "text": "让本地能力留在清楚的边界里",
+          "level": 2
+        },
+        {
+          "id": "calm-material",
+          "text": "玻璃材质应该服务于内容",
+          "level": 2
+        }
+      ]
+    }
+  },
+  {
+    "kind": "posts",
+    "slug": "rust-cli-error-handling",
+    "title": "Rust CLI 的错误处理与可观测性",
+    "data": {
+      "slug": "rust-cli-error-handling",
+      "title": "Rust CLI 的错误处理与可观测性",
+      "excerpt": "让错误不仅能够返回，还能帮助使用者行动：区分类型、补充上下文，并保留完整原因链。",
+      "category": "rust",
+      "tags": [
+        "Rust",
+        "CLI",
+        "错误处理"
+      ],
+      "publishedAt": "2025-05-21",
+      "blocks": [
+        {
+          "kind": "paragraph",
+          "content": [
+            "一个工具失败时，使用者最需要的不是一段调试堆栈，而是三个答案：哪一步失败、为什么失败、接下来可以做什么。Rust 的 Result 提供了很好的基础，但仅仅把错误用问号一路传到 main，并不会自动得到一个好用的命令行程序。错误信息也需要被认真设计。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "classify-errors",
+          "text": "先区分预期失败与内部故障"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "用户输入无效、文件不存在、外部服务暂时不可用，都可能是正常运行中的预期失败。程序内部违反约定则属于另一类问题。把两者分开，才能决定退出码、重试策略和展示方式。库层使用有语义的错误类型，应用边界再把它转换成适合人的说明。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "不要过早把所有错误变成字符串。字符串会丢掉类型信息，使上层只能通过匹配文字判断是否重试。保留原始原因，并在穿过模块边界时增加上下文，能够同时照顾程序处理与人工排查。错误链的每一层都应增加新的信息，而不是重复一句“操作失败”。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "useful-context",
+          "text": "在真正理解操作的地方补充上下文"
+        },
+        {
+          "kind": "code",
+          "language": "rust",
+          "code": "use std::{fs, io, path::Path};\n\nfn read_config(path: &Path) -> Result<String, io::Error> {\n    fs::read_to_string(path).map_err(|cause| {\n        io::Error::new(\n            cause.kind(),\n            format!(\"cannot read config {}: {cause}\", path.display()),\n        )\n    })\n}\n\nfn main() {\n    if let Err(error) = read_config(Path::new(\"config.toml\")) {\n        eprintln!(\"配置读取失败：{error}\");\n        std::process::exit(1);\n    }\n}"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "这个简化例子保留了 IO 错误的类别，并指出具体配置路径。真实工程中可以用自定义错误枚举保留完整的 source 链，或者在应用层采用上下文工具。关键不在于选择哪个库，而在于错误发生时是否仍然知道操作对象和所在阶段。敏感路径或令牌则需要在输出前脱敏。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "stdout-stderr",
+          "text": "让标准输出保持可组合"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "成功结果写到 stdout，进度与诊断写到 stderr，这样工具就能被管道组合。面向人的默认输出应当简洁；详细日志通过显式开关启用。需要机器处理时，提供稳定的结构化格式，并把字段契约当作公共接口，不要在同一输出流里混入装饰性文本。"
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              "错误提示包含阶段和可行动的建议。"
+            ],
+            [
+              "日志不输出密钥、令牌和完整私人配置。"
+            ],
+            [
+              "相同类别的失败返回稳定的非零退出码。"
+            ],
+            [
+              "不在底层库中直接调用 process::exit。"
+            ]
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "testing-errors",
+          "text": "把失败体验也放进测试"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "为缺失文件、无效参数、无权限目录和下游超时建立测试。除了验证退出码，也检查关键说明是否存在，标准输出是否仍然保持干净。对完整错误文案做快照时应当谨慎，临时目录等环境差异会让测试脆弱。断言稳定的语义信息，通常更值得。"
+          ]
+        },
+        {
+          "kind": "quote",
+          "content": [
+            "错误信息是失败时的用户界面，也应该拥有和成功路径一样清楚的设计。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "一个可观察的 CLI 不一定需要复杂的日志系统。明确的输出通道、保留下来的原因链和可以预测的退出行为，就能让它在脚本、终端和自动化流水线中都更可靠。"
+          ]
+        }
+      ],
+      "readingTime": 5,
+      "content": {
+        "root": {
+          "type": "root",
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "一个工具失败时，使用者最需要的不是一段调试堆栈，而是三个答案：哪一步失败、为什么失败、接下来可以做什么。Rust 的 Result 提供了很好的基础，但仅仅把错误用问号一路传到 main，并不会自动得到一个好用的命令行程序。错误信息也需要被认真设计。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "先区分预期失败与内部故障",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "用户输入无效、文件不存在、外部服务暂时不可用，都可能是正常运行中的预期失败。程序内部违反约定则属于另一类问题。把两者分开，才能决定退出码、重试策略和展示方式。库层使用有语义的错误类型，应用边界再把它转换成适合人的说明。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "不要过早把所有错误变成字符串。字符串会丢掉类型信息，使上层只能通过匹配文字判断是否重试。保留原始原因，并在穿过模块边界时增加上下文，能够同时照顾程序处理与人工排查。错误链的每一层都应增加新的信息，而不是重复一句“操作失败”。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "在真正理解操作的地方补充上下文",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "use std::{fs, io, path::Path};\n\nfn read_config(path: &Path) -> Result<String, io::Error> {\n    fs::read_to_string(path).map_err(|cause| {\n        io::Error::new(\n            cause.kind(),\n            format!(\"cannot read config {}: {cause}\", path.display()),\n        )\n    })\n}\n\nfn main() {\n    if let Err(error) = read_config(Path::new(\"config.toml\")) {\n        eprintln!(\"配置读取失败：{error}\");\n        std::process::exit(1);\n    }\n}",
+                  "format": 16
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "这个简化例子保留了 IO 错误的类别，并指出具体配置路径。真实工程中可以用自定义错误枚举保留完整的 source 链，或者在应用层采用上下文工具。关键不在于选择哪个库，而在于错误发生时是否仍然知道操作对象和所在阶段。敏感路径或令牌则需要在输出前脱敏。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "让标准输出保持可组合",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "成功结果写到 stdout，进度与诊断写到 stderr，这样工具就能被管道组合。面向人的默认输出应当简洁；详细日志通过显式开关启用。需要机器处理时，提供稳定的结构化格式，并把字段契约当作公共接口，不要在同一输出流里混入装饰性文本。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "把失败体验也放进测试",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "为缺失文件、无效参数、无权限目录和下游超时建立测试。除了验证退出码，也检查关键说明是否存在，标准输出是否仍然保持干净。对完整错误文案做快照时应当谨慎，临时目录等环境差异会让测试脆弱。断言稳定的语义信息，通常更值得。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "一个可观察的 CLI 不一定需要复杂的日志系统。明确的输出通道、保留下来的原因链和可以预测的退出行为，就能让它在脚本、终端和自动化流水线中都更可靠。",
+                  "format": 0
+                }
+              ]
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "version": 1
+        }
+      },
+      "headings": [
+        {
+          "id": "classify-errors",
+          "text": "先区分预期失败与内部故障",
+          "level": 2
+        },
+        {
+          "id": "useful-context",
+          "text": "在真正理解操作的地方补充上下文",
+          "level": 2
+        },
+        {
+          "id": "stdout-stderr",
+          "text": "让标准输出保持可组合",
+          "level": 2
+        },
+        {
+          "id": "testing-errors",
+          "text": "把失败体验也放进测试",
+          "level": 2
+        }
+      ]
+    }
+  },
+  {
+    "kind": "posts",
+    "slug": "rust-ownership-in-practice",
+    "title": "用所有权理清 Rust 工程边界",
+    "data": {
+      "slug": "rust-ownership-in-practice",
+      "title": "用所有权理清 Rust 工程边界",
+      "excerpt": "借用检查器不只是编译门槛。把所有权当作设计工具，让资源、状态与模块职责更加清晰。",
+      "category": "rust",
+      "tags": [
+        "Rust",
+        "所有权",
+        "软件设计"
+      ],
+      "publishedAt": "2025-06-15",
+      "blocks": [
+        {
+          "kind": "paragraph",
+          "content": [
+            "刚接触 Rust 时，很容易把编译器当成一个需要说服的对手。遇到借用冲突，就尝试 clone、加锁，或者把引用生命周期写得更长。但许多报错其实在提示同一个问题：这份数据究竟由谁负责，哪些模块只是暂时使用它？回答这个问题，往往比调整语法更接近解决方案。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "ownership-as-design",
+          "text": "先画出资源的拥有者"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "以一个媒体处理任务为例，任务拥有输入路径、输出目录和处理参数；探测阶段只借用输入路径，转码阶段借用配置，最终产物则独立拥有自己的路径。不要让每个阶段都握住整个应用状态，这会让模块关系变得模糊，也让测试难以构造最小输入。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "把需要长期保存的数据放进有明确生命周期的结构体中，把临时访问表达为参数。所有权转移说明调用者不再使用这份值，借用说明接收者不能把它据为己有。它们既是编译器规则，也是接口向读者作出的承诺。"
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "borrowing-interfaces",
+          "text": "让函数签名解释意图"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "只读取文本的函数通常接收 &str，而不是要求调用方提供一个 String。需要保存路径的构造函数可以接收 impl Into<PathBuf>，在边界处取得所有权。不要为了灵活而过度泛型化；先让调用方式自然，再在真实出现重复时抽象。下面的例子把输入借用与输出拥有明确分开。"
+          ]
+        },
+        {
+          "kind": "code",
+          "language": "rust",
+          "code": "use std::path::{Path, PathBuf};\n\nstruct Artifact {\n    path: PathBuf,\n    bytes: u64,\n}\n\nfn inspect(input: &Path) -> std::io::Result<Artifact> {\n    let metadata = std::fs::metadata(input)?;\n    Ok(Artifact {\n        path: input.to_path_buf(),\n        bytes: metadata.len(),\n    })\n}"
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "state-transitions",
+          "text": "用类型表达状态转换"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "如果任务必须先验证再执行，可以让验证函数消耗 DraftJob 并返回 ReadyJob。执行函数只接受 ReadyJob，这样“未经验证就运行”的状态就无法轻易表达。类型不必记录所有细枝末节，但关键阶段值得有明确的边界。这比散落的布尔值更容易审查，也更不容易忘记检查。"
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              "临时读取：优先使用不可变借用。"
+            ],
+            [
+              "修改状态：让可变借用的作用域尽可能短。"
+            ],
+            [
+              "跨线程共享：先问能否传递消息，再考虑共享可变状态。"
+            ],
+            [
+              "需要 clone：确认复制成本与语义，不把它当作消除报错的默认动作。"
+            ]
+          ]
+        },
+        {
+          "kind": "heading",
+          "level": 2,
+          "id": "practical-balance",
+          "text": "在清晰与复杂之间保持平衡"
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "不是每个字段都需要一个自定义生命周期，也不是每次复制都值得优化。配置字符串少量 clone 往往比复杂的引用关系更容易维护。需要关注的是大缓冲区、昂贵资源和隐藏的共享修改。先使用简单的拥有值版本建立行为，再通过测量决定哪里需要借用优化。"
+          ]
+        },
+        {
+          "kind": "quote",
+          "content": [
+            "最好的所有权设计，让读者即使不运行编译器，也能看懂资源会在哪里结束。"
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "content": [
+            "当函数签名开始讲清楚谁拥有、谁借用、谁能修改，借用检查器就不再只是阻力。它把我们原本应该在设计里回答的问题，提前变成了可以验证的约束。"
+          ]
+        }
+      ],
+      "readingTime": 5,
+      "content": {
+        "root": {
+          "type": "root",
+          "children": [
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "刚接触 Rust 时，很容易把编译器当成一个需要说服的对手。遇到借用冲突，就尝试 clone、加锁，或者把引用生命周期写得更长。但许多报错其实在提示同一个问题：这份数据究竟由谁负责，哪些模块只是暂时使用它？回答这个问题，往往比调整语法更接近解决方案。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "先画出资源的拥有者",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "以一个媒体处理任务为例，任务拥有输入路径、输出目录和处理参数；探测阶段只借用输入路径，转码阶段借用配置，最终产物则独立拥有自己的路径。不要让每个阶段都握住整个应用状态，这会让模块关系变得模糊，也让测试难以构造最小输入。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "把需要长期保存的数据放进有明确生命周期的结构体中，把临时访问表达为参数。所有权转移说明调用者不再使用这份值，借用说明接收者不能把它据为己有。它们既是编译器规则，也是接口向读者作出的承诺。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "让函数签名解释意图",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "只读取文本的函数通常接收 &str，而不是要求调用方提供一个 String。需要保存路径的构造函数可以接收 impl Into<PathBuf>，在边界处取得所有权。不要为了灵活而过度泛型化；先让调用方式自然，再在真实出现重复时抽象。下面的例子把输入借用与输出拥有明确分开。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "use std::path::{Path, PathBuf};\n\nstruct Artifact {\n    path: PathBuf,\n    bytes: u64,\n}\n\nfn inspect(input: &Path) -> std::io::Result<Artifact> {\n    let metadata = std::fs::metadata(input)?;\n    Ok(Artifact {\n        path: input.to_path_buf(),\n        bytes: metadata.len(),\n    })\n}",
+                  "format": 16
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "用类型表达状态转换",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "如果任务必须先验证再执行，可以让验证函数消耗 DraftJob 并返回 ReadyJob。执行函数只接受 ReadyJob，这样“未经验证就运行”的状态就无法轻易表达。类型不必记录所有细枝末节，但关键阶段值得有明确的边界。这比散落的布尔值更容易审查，也更不容易忘记检查。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "heading",
+              "tag": "h2",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "在清晰与复杂之间保持平衡",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "不是每个字段都需要一个自定义生命周期，也不是每次复制都值得优化。配置字符串少量 clone 往往比复杂的引用关系更容易维护。需要关注的是大缓冲区、昂贵资源和隐藏的共享修改。先使用简单的拥有值版本建立行为，再通过测量决定哪里需要借用优化。",
+                  "format": 0
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "children": [
+                {
+                  "type": "text",
+                  "text": "当函数签名开始讲清楚谁拥有、谁借用、谁能修改，借用检查器就不再只是阻力。它把我们原本应该在设计里回答的问题，提前变成了可以验证的约束。",
+                  "format": 0
+                }
+              ]
+            }
+          ],
+          "direction": null,
+          "format": "",
+          "indent": 0,
+          "version": 1
+        }
+      },
+      "headings": [
+        {
+          "id": "ownership-as-design",
+          "text": "先画出资源的拥有者",
+          "level": 2
+        },
+        {
+          "id": "borrowing-interfaces",
+          "text": "让函数签名解释意图",
+          "level": 2
+        },
+        {
+          "id": "state-transitions",
+          "text": "用类型表达状态转换",
+          "level": 2
+        },
+        {
+          "id": "practical-balance",
+          "text": "在清晰与复杂之间保持平衡",
+          "level": 2
+        }
+      ]
+    }
+  },
+  {
+    "kind": "projects",
+    "slug": "hongguo-manju-pc",
+    "title": "红果漫剧 PC 客户端",
+    "data": {
+      "slug": "hongguo-manju-pc",
+      "id": "hongguo-manju-pc",
+      "title": "红果漫剧 PC 客户端",
+      "description": "把小屏的精彩，带到桌面。围绕内容发现、阅读节奏与桌面交互，探索一款更专注、更舒适的漫剧客户端。",
+      "tags": [
+        "Go",
+        "Wails",
+        "TypeScript",
+        "桌面应用"
+      ],
+      "featured": true,
+      "articleSlug": "hongguo-manju-desktop-notes",
+      "highlights": [
+        "为大屏重新组织内容层级，而不只是放大移动端。",
+        "探索键盘操作、窗口状态与连续浏览的体验。",
+        "将界面层和本地能力分离，保持工程边界清晰。"
+      ],
+      "isSample": false
+    }
+  },
+  {
+    "kind": "projects",
+    "slug": "go-worker-queue",
+    "title": "Go 并发任务队列",
+    "data": {
+      "slug": "go-worker-queue",
+      "id": "go-worker-queue",
+      "title": "Go 并发任务队列",
+      "description": "一个从任务接收、并发限制到取消与优雅退出的工程练习。让并发不仅跑得快，也能够被理解、被控制。",
+      "tags": [
+        "Go",
+        "Context",
+        "并发"
+      ],
+      "featured": false,
+      "articleSlug": "go-worker-pool",
+      "highlights": [
+        "有界队列和明确的背压。",
+        "在任务边界传递取消信号。",
+        "通过指标而不是猜测决定并发度。"
+      ],
+      "isSample": true
+    }
+  },
+  {
+    "kind": "projects",
+    "slug": "rust-media-toolkit",
+    "title": "Rust 媒体工具箱",
+    "data": {
+      "slug": "rust-media-toolkit",
+      "id": "rust-media-toolkit",
+      "title": "Rust 媒体工具箱",
+      "description": "使用 Rust 组织命令行接口，以 FFmpeg 完成媒体处理。关注错误上下文、临时文件管理和可重试的任务。",
+      "tags": [
+        "Rust",
+        "FFmpeg",
+        "CLI"
+      ],
+      "featured": false,
+      "articleSlug": "ffmpeg-media-pipeline",
+      "highlights": [
+        "显式的处理阶段与错误类型。",
+        "以可验证的产物判断任务结果。",
+        "把媒体能力组合成简单、可复用的工具。"
+      ],
+      "isSample": true
+    }
+  },
+  {
+    "kind": "settings",
+    "slug": "site",
+    "title": "Site",
+    "data": {
+      "siteTitle": "敏航的手记",
+      "siteSubtitle": "MINHANG / NOTES",
+      "authorName": "敏航",
+      "initials": "敏",
+      "avatarUrl": "",
+      "tagline": "把想法，做成好用的软件。",
+      "bio": "我是敏航，喜欢把想法变成现实。关注 Go、Rust、音视频技术与跨平台桌面应用，在这里分享实践、思考，以及构建过程中的小小发现。",
+      "email": "",
+      "githubUrl": "",
+      "socialLinks": [],
+      "expertise": [
+        {
+          "id": "go",
+          "title": "Go",
+          "description": "简单，也可以很强大",
+          "detail": "并发模型、服务端架构与可靠的工程实践。"
+        },
+        {
+          "id": "rust",
+          "title": "Rust",
+          "description": "安全与性能的平衡",
+          "detail": "所有权、系统编程与可靠的命令行工具。"
+        },
+        {
+          "id": "multimedia",
+          "title": "音视频",
+          "description": "让每一帧恰到好处",
+          "detail": "FFmpeg、媒体处理流水线与音视频同步。"
+        },
+        {
+          "id": "desktop",
+          "title": "桌面应用",
+          "description": "把体验带到大屏幕",
+          "detail": "Wails、Tauri 与跨平台交互设计。"
+        }
+      ],
+      "techStack": [
+        {
+          "name": "Go",
+          "kind": "go",
+          "note": "并发与服务"
+        },
+        {
+          "name": "Rust",
+          "kind": "rust",
+          "note": "安全与性能"
+        },
+        {
+          "name": "TypeScript",
+          "kind": "desktop",
+          "note": "清晰的界面逻辑"
+        },
+        {
+          "name": "FFmpeg",
+          "kind": "multimedia",
+          "note": "音视频处理"
+        },
+        {
+          "name": "Wails",
+          "kind": "desktop",
+          "note": "轻盈的桌面应用"
+        },
+        {
+          "name": "Tauri",
+          "kind": "rust",
+          "note": "跨平台的新可能"
+        }
+      ]
+    }
+  }
+]

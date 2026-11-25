@@ -18,14 +18,14 @@ async function loadArticles(): Promise<any[]> {
     import("@/content/articles/rust-cli-error-handling"),
     import("@/content/articles/rust-ownership-in-practice"),
   ])
-  return mods.map((m) => m.article || m.default).filter(Boolean)
+  return mods.map((m) => m.article).filter(Boolean)
 }
 
-export async function getPublicSiteSettings() {
+async function local_getPublicSiteSettings() {
   return site
 }
 
-export async function getPublishedPostSummaries() {
+async function local_getPublishedPostSummaries() {
   const articles = await loadArticles()
   return articles.map((a: any) => ({
     slug: a.slug,
@@ -39,7 +39,7 @@ export async function getPublishedPostSummaries() {
   }))
 }
 
-export async function getPublishedProjects() {
+async function local_getPublishedProjects() {
   return projects.map((p: Project) => ({
     slug: p.id,
     id: p.id,
@@ -53,15 +53,15 @@ export async function getPublishedProjects() {
   }))
 }
 
-export async function getPublishedProject(slug: string) {
-  return getProjectDetail(slug)
+async function local_getPublishedProject(slug: string) {
+  return local_getProjectDetail(slug)
 }
 
-export async function getPublishedPost(slug: string) {
-  return getPostDetail(slug)
+async function local_getPublishedPost(slug: string) {
+  return local_getPostDetail(slug)
 }
 
-export async function getPostDetail(slug: string) {
+async function local_getPostDetail(slug: string) {
   const articles = await loadArticles()
   const a: any = articles.find((x: any) => x.slug === slug)
   if (!a) return null
@@ -96,6 +96,20 @@ export async function getPostDetail(slug: string) {
   }
 }
 
-export async function getProjectDetail(id: string) {
+async function local_getProjectDetail(id: string) {
   return projects.find((p) => p.id === id) || null
 }
+
+async function api(path: string): Promise<any> {
+ const response = await fetch(`${process.env.BLOG_API_URL}/api/public/${path}`, {cache: "no-store", signal: AbortSignal.timeout(8000)})
+ if (response.status === 404) return null
+ if (!response.ok) throw new Error(`Blog API returned ${response.status}`)
+ return response.json()
+}
+export async function getPublicSiteSettings(): Promise<any> { return process.env.BLOG_API_URL ? api("settings/site") : local_getPublicSiteSettings() }
+export async function getPublishedPostSummaries(): Promise<any[]> { return process.env.BLOG_API_URL ? api("posts") : local_getPublishedPostSummaries() }
+export async function getPublishedProjects(): Promise<any[]> { return process.env.BLOG_API_URL ? api("projects") : local_getPublishedProjects() }
+export async function getPublishedProject(slug: string): Promise<any> { return process.env.BLOG_API_URL ? api("projects/" + encodeURIComponent(slug)) : local_getPublishedProject(slug) }
+export async function getPublishedPost(slug: string): Promise<any> { return process.env.BLOG_API_URL ? api("posts/" + encodeURIComponent(slug)) : local_getPublishedPost(slug) }
+export async function getPostDetail(slug: string): Promise<any> { return process.env.BLOG_API_URL ? api("posts/" + encodeURIComponent(slug)) : local_getPostDetail(slug) }
+export async function getProjectDetail(slug: string): Promise<any> { return process.env.BLOG_API_URL ? api("projects/" + encodeURIComponent(slug)) : local_getProjectDetail(slug) }
