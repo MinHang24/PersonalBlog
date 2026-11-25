@@ -21,14 +21,14 @@ psql -h localhost -U your_db_user -d personal_blog -v ON_ERROR_STOP=1 -f 03-seed
 
 ## 应用连接
 
-后端默认启用 postgres 配置，启动前设置：
+生产构建使用 Maven prod profile（`mvn -Pprod clean verify`），启动前设置：
 
 - `DATABASE_URL=jdbc:postgresql://localhost:5432/personal_blog`
 - `DATABASE_USER`：数据库账号
 - `DATABASE_PASSWORD`：数据库密码
 - `BLOG_ADMIN_PASSWORD`：博客后台管理员密码，至少16字符，和数据库密码不是一回事
 
-在 IDEA Run Configuration 的 Environment variables 中填写即可，不要提交密码到仓库。在 backend 目录运行 `mvn spring-boot:run`，或使用构建后的 `java -jar target/backend-1.0.0.jar`。数据库账号需具备 public schema 的 USAGE 和 entry 表的 SELECT/INSERT/UPDATE/DELETE 权限；若与建表账号相同，已作为表所有者具备权限。
+在 IDEA Run Configuration 的 Environment variables 中填写即可，不要提交密码到仓库。在 backend 目录运行 `mvn -Pprod spring-boot:run`，或使用 prod 构建后的 `java -jar target/backend-1.0.0.jar`。原 postgres Spring profile 已替换为 prod。数据库账号需具备 public schema 的 USAGE 和 entry 表的 SELECT/INSERT/UPDATE/DELETE 权限；若与建表账号相同，已作为表所有者具备权限。
 
 应用使用 `ddl-auto=validate`，启动只验证结构，不自动建表或改表。Hibernate JSON 映射已同步修改，避免 PostgreSQL 的 TEXT/大对象 OID 与 JSONB 类型混用。开发时如需旧 H2 模式，可显式使用 `SPRING_PROFILES_ACTIVE=h2`；旧 H2 文件的 TEXT 列不会由这份 PostgreSQL 脚本自动迁移。
 

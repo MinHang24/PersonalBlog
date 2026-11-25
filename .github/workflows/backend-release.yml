@@ -1,0 +1,37 @@
+name: Backend release
+
+on:
+  push:
+    branches: [release]
+  pull_request:
+    branches: [release]
+
+permissions:
+  contents: read
+
+jobs:
+  production-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - name: Verify and package production backend
+        run: mvn --batch-mode --no-transfer-progress -Pprod clean verify
+      - name: Verify packaged environment
+        run: python3 scripts/check-packaged-profile.py prod
+      - name: Upload production JAR
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-production-${{ github.sha }}
+          path: backend/target/backend-*.jar
+          if-no-files-found: error
+          retention-days: 14
